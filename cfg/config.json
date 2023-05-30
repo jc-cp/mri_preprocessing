@@ -1,1 +1,13 @@
 
+{
+    "denoising": {
+        "enabled": true,
+        "parameter1": "value1",
+        "parameter2": "value2"
+    },
+    "skull_stripping": {
+        "enabled": false,
+        "parameter3": "value3",
+        "parameter4": "value4"
+    },
+}
