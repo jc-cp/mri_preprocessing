@@ -29,7 +29,7 @@ This repository aims to present a general, customazible pipeline for MRI images 
 |   |   |-- image_conversion.py
 |   |-- pipeline.py
 |   |-- main.py
-|-- /configs
+|-- /cfg
 |   |-- config.json
 |   |-- /templates
 |   |   |-- fmri_template.json
