@@ -38,3 +38,17 @@ This repository aims to present a general, customazible pipeline for MRI images 
 |   |   |-- ...
 |-- README.md
 ```
+
+
+### MRI Imaging Types
+**Structural MRI (sMRI):** These images provide detailed 3D representations of the brain anatomy, and the pre-processing often involves steps like denoising, bias field correction, skull stripping, segmentation, and spatial normalization.
+
+**Functional MRI (fMRI):** fMRI measures brain activity by detecting changes associated with blood flow. In addition to the pre-processing steps for sMRI, fMRI data often require additional steps like slice-timing correction, motion correction, spatial smoothing, temporal filtering, and registration of each individual's data to a common space.
+
+**Diffusion Tensor Imaging (DTI):** DTI is a type of MRI that allows for mapping of the diffusion process of molecules, mainly water, in biological tissues, particularly in the white matter of the brain. DTI pre-processing includes steps like denoising, correction for eddy currents and subject motion, and diffusion tensor estimation.
+
+**Arterial Spin Labeling (ASL):** ASL is a specific type of MRI that is used to measure cerebral blood flow. ASL pre-processing includes steps like motion correction, registration to a standard space, and perfusion-weighted image creation.
+
+**Magnetic Resonance Spectroscopy (MRS):** MRS is an MRI technique used to measure the levels of different metabolites in body tissues. The pre-processing steps for MRS data often include phase correction, baseline correction, and frequency alignment.
+
+**Susceptibility Weighted Imaging (SWI):** SWI is an MRI technique which exploits the susceptibility differences between tissues. Pre-processing steps might include phase unwrapping and filtering, and phase mask creation.
