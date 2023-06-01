@@ -6,7 +6,7 @@ import os
 
 #TODO:
 # slice order and the time acquisition used in the slice timing correction should match your actual MRI data acquisition parameters
-# recheck errors in this file
+# recheck errors in this file and libraries
 
 class MotionCorrection:
     def __init__(self, config: dict):
