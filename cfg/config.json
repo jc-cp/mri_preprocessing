@@ -2,12 +2,71 @@
 {
     "denoising": {
         "enabled": true,
-        "parameter1": "value1",
-        "parameter2": "value2"
+        "methods": {
+            "gaussian":{
+                "enabled": true,
+                "sigma": "value1"    
+            },
+            "nlm":{
+                "enabled": false,
+                "search_radius": "value1",
+                "patch_radius": "value2",
+                "channel_axis":null
+            },
+            "tv": {
+                "enabled": false,
+                "weight": "value1",
+                "channel_axis":null
+            },
+            "aniso_diffusion": {
+                "enabled": false,
+                "sigma_range": "value2",
+                "sigma_spatial": "value3"
+            },
+            "wavelet": {
+                "enabled": false,
+                "wavelet": "db1",
+                "sigma": "value4"
+            }
+        }
+    },
+    "motion_correction":{
+        "enabled": true,
+        "methods": {
+            "volume": {
+                "enabled": false
+            },
+            "slice_timing": false
+        }
+    },
+    "normalization": {
+        "enabled": true,
+        "methods": {
+            "intensity": {        
+                "enabled": true
+            },
+            "zscore": {
+                "enabled": false
+            },
+            "histogram": {
+                "enabled": false
+            }
+        }
     },
     "skull_stripping": {
         "enabled": false,
-        "parameter3": "value3",
-        "parameter4": "value4"
-    },
+        "methods": {
+            "threshold": {
+                "enabled": true,
+                "value": 100
+            },
+            "morphological": {
+                "enabled": false
+            },
+            "atlas": {
+                "enabled": false,
+                "path": "/path/to/your/atlas.nii"
+            }
+        }
+    }
 }
