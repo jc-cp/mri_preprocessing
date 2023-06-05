@@ -90,6 +90,11 @@ Usually refers to the process of reducing the number of levels in an image or si
 </details>
 
 <details>
+<summary>3d to 2D Conversion</summary>
+Used when the memory to train a 3D model is limited; or when scarce amount of data. Attention: make sure to co-register the scans beforehand, so when the axial 2D slices are created the iteration is over the same axis.
+</details>
+
+<details>
 <summary>Denoising</summary>
 Denoising of MRI images can be accomplished by numerous methods, each with its strengths and weaknesses. Here are two methods that are commonly used:
 
@@ -135,6 +140,11 @@ Normalization is an essential pre-processing step in image analysis. It helps to
 </details>
 
 <details>
+<summary>Quality Control</summary>
+This step involves ensuring that the collected MRI data is of high quality. Poor quality data can occur due to numerous factors such as patient movement, technical issues with the scanner, etc. QC involves steps like visual inspection of the data, checking for excessive motion, verifying good signal-to-noise ratio, etc. This is crucial because poor quality data can affect the subsequent steps and lead to incorrect results. In some automated pipelines, QC might involve algorithms for outlier detection or checks for unexpected data characteristics.
+</details>
+
+<details>
 <summary>Registration</summary>
 
     Registration is a broader term that refers to the process of aligning different datasets into one common space. In MRI, this is often used to align an individual's anatomical scan with a standard template (like the MNI template), allowing for group analyses across individuals. It could also refer to the process of aligning an individual's functional images with their own anatomical scan, which ensures that the functional data can be accurately overlaid onto the correct anatomical structures.
@@ -172,3 +182,4 @@ Skull stripping is a critical pre-processing step in the analysis of neuroimagin
     Depending on the scanner setup, the slices os MRIs could be acquired sequentially or in an interleaved fashion. This means that there is a small delay between when the first slice is acquired and when the last slice is acquired. As most fMRI scans acquire different slices at different times within each TR (Repetition Time), this can lead to spatial-temporal misalignment. However, when analyzing the data, it is often assumed that all slices from a given volume are acquired simultaneously. Slice-timing is specifically for correcting the timing difference among slices within each volume. It can be corrected by resampling the signal at each voxel to a reference time point, using the slice-timing information. Also note that slice timing correction is usually performed before motion correction in the overall fMRI preprocessing pipeline.
 
 </details>
+

@@ -102,6 +102,11 @@
             }
         }
     },
+    "quality_control":{
+        "enabled":false,
+        "expected_dims": [256, 256, 256],
+        "expected_voxel_size": [1.0, 1.0, 1.0]
+    },
     "registration":{
         "enabled": true,
         "methods":{
