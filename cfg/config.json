@@ -1,5 +1,10 @@
 
-{    
+{   "image_visualization":{
+        "enabled": true,
+        "slice_index": 50
+    },
+
+    
     "bias_field_correction": {
         "enabled": true,
         "methods": {

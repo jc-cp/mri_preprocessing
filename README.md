@@ -215,6 +215,6 @@ Skull stripping is a critical pre-processing step in the analysis of neuroimagin
 - [ ] Add A/B tests and some other GitActions (like formatting)
 - [ ] Look at the BIDS standard and see if reasonable
 - [ ] Testing of different steps 
-- [ ] Add visualization script to test the functionalities 
+- [x] Add visualization script to test the functionalities 
 - [ ] Do an overall method to readme check for completeness
 

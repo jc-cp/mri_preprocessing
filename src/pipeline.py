@@ -10,6 +10,7 @@ from preprocessing.registration import Registration
 from utils.image_conversion import ImageConversion
 from utils.image_loading import ImageLoading
 from utils.image_saving import ImageSaving
+from utils.image_visualization import ImageVisualization
 
 
 class Pipeline:
@@ -36,6 +37,7 @@ class Pipeline:
         self.image_loading = ImageLoading(self.config['image_loading'])
         self.image_conversion = ImageConversion(self.config['image_conversion'])
         self.image_saving = ImageSaving(self.config['image_saving'])
+        self.image_visualization = ImageVisualization(self.config['visualization'])
 
     def run(self):
         # Set up logging
@@ -50,13 +52,21 @@ class Pipeline:
             image_data = [self.image_conversion.run(image) for image in image_data]
 
         # Apply steps
+        image_data_dict = {}
+        original_image_data = image_data    # A copy for comparison through visualization 
         for step_name, StepClass in self.step_classes.items():
             if self.config[step_name]['enabled']:
                 try:
                     step_instance = StepClass(self.config[step_name])
                     image_data = [step_instance.run(image) for image in image_data]
+                    image_data_dict[step_name] = (original_image_data, image_data)
                     logging.info(f"Successfully applied {step_name}.")
                 except Exception as e:
                     logging.error(f"Error applying {step_name}: {str(e)}")
                     raise e
+                
         self.image_saving.run(image_data, input_paths)
+        
+        # Visualization if enabled
+        if self.config['visualization']['enabled']:
+            self.image_visualization.run(image_data_dict)

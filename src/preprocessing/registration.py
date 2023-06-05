@@ -7,12 +7,16 @@ import itk
 class Registration:
     def __init__(self, config: dict):
         self.config = config
+        self.methods = {
+            "itk": self.itk_registration,
+            "spm": self.spm_registration
+        }
 
     def run(self, image: str):
-        if self.config['methods']['spm']['enabled']:
-            return self.spm_registration(image)
-        if self.config['methods']['itk']['enabled']:
-            return self.itk_registration(image)
+        for method_name, method in self.methods.items():
+            if self.config['methods'][method_name]['enabled']:
+                image = method(image, self.config['methods'][method_name])
+        return image
 
 
     def itk_registration(self, image):
