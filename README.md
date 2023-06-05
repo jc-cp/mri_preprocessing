@@ -183,3 +183,28 @@ Skull stripping is a critical pre-processing step in the analysis of neuroimagin
 
 </details>
 
+
+### To do's
+- [ ] Add other quality control checks as needed
+- [ ] Check MRIQC for quality control
+- [ ] Implement LAPGM Bias Field Correction
+- [ ] Check Binning expected format for the class 
+- [ ] Implement final conversion from 3d to 2d
+- [ ] Create methods dict in classes to get parameters easier 
+- [ ] Create Feature extraction class and add readme description
+- [ ] Rethink pre-processing segmentation options
+- [ ] Recheck slice order and the time acquisition used in the slice timing correction -- should match your actual MRI data acquisition parameters
+- [ ] Implement intensity normalization option
+- [ ] Check output from spm registration
+- [ ] Check how to make parameter file for registration modular, hoe to properly get it 
+- [ ] Check output from the libraries in resmapling
+- [ ] Implement option for HDBET skull stripping and add to the installation
+- [ ] Implement the DICOM to NIFTI conversion with checks 
+- [ ] Rethink and implement the image loading class
+- [ ] Rethink and implement the image saving class
+- [ ] Finalise the list of steps in the pipeline, taking into accont the order 
+- [ ] Have one default config.json
+- [ ] Have a fmri template JSON
+- [ ] Have a smri template JSON
+- [ ] Have a dti template JSON
+
