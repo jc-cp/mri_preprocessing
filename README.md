@@ -207,4 +207,5 @@ Skull stripping is a critical pre-processing step in the analysis of neuroimagin
 - [ ] Have a fmri template JSON
 - [ ] Have a smri template JSON
 - [ ] Have a dti template JSON
+- [ ] Edit readme.md folder structure overview
 
