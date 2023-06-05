@@ -1,8 +1,6 @@
 from nipype.interfaces import fsl
 import os
 
-#TODO:
-# slice order and the time acquisition used in the slice timing correction should match your actual MRI data acquisition parameters
 
 class MotionCorrection:
     def __init__(self, config: dict):

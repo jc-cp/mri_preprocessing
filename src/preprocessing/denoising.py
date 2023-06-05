@@ -3,6 +3,7 @@ from skimage.filters import gaussian
 import numpy as np
 from scipy.signal import medfilt
 
+
 class Denoising:
     def __init__(self, config: dict):
         self.config = config

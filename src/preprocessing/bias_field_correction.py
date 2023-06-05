@@ -2,8 +2,6 @@ import lapgm
 import SimpleITK as sitk
 import os
 
-# TODO: 
-# - do proper LAPGM implmenetation
 
 class BiasFieldCorrection:
     def __init__(self, config: dict):

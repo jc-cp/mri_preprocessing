@@ -1,6 +1,7 @@
 import SimpleITK as sitk
 from skimage.filters import threshold_otsu
 
+
 class Filtering:
     def __init__(self, config: dict):
         self.config = config

@@ -1,7 +1,5 @@
 import numpy as np
 
-# TODO:
-# - check input format for the class, usually it is assumed it is a 2D or 3D array
 
 class Binning:
     def __init__(self, config: dict):

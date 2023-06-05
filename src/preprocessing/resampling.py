@@ -2,8 +2,6 @@ from nipype.interfaces.fsl import FLIRT
 from nipype.interfaces.ants import ResampleImageBySpacing
 import os
 
-# TODO:
-# - check the output of libs
 
 class Resampling:
     def __init__(self, config: dict):

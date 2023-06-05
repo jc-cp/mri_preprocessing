@@ -1,6 +1,7 @@
 import numpy as np
 import nibabel as nib
 
+
 class QualityControl:
     def __init__(self, config: dict):
         self.config = config

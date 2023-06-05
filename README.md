@@ -194,7 +194,7 @@ Skull stripping is a critical pre-processing step in the analysis of neuroimagin
 - [ ] Create Feature extraction class and add readme description
 - [ ] Rethink pre-processing segmentation options
 - [ ] Recheck slice order and the time acquisition used in the slice timing correction -- should match your actual MRI data acquisition parameters
-- [ ] Implement intensity normalization option
+- [ ] Implement intensity normalization option from https://github.com/jcreinhold/intensity-normalization
 - [ ] Check output from spm registration
 - [ ] Check how to make parameter file for registration modular, hoe to properly get it 
 - [ ] Check output from the libraries in resmapling
@@ -203,9 +203,17 @@ Skull stripping is a critical pre-processing step in the analysis of neuroimagin
 - [ ] Rethink and implement the image loading class
 - [ ] Rethink and implement the image saving class
 - [ ] Finalise the list of steps in the pipeline, taking into accont the order 
-- [ ] Have one default config.json
+- [ ] Have one default config.json in proper format
 - [ ] Have a fmri template JSON
 - [ ] Have a smri template JSON
 - [ ] Have a dti template JSON
 - [ ] Edit readme.md folder structure overview
+- [ ] Create the requirements.txt 
+- [ ] Think about deployment in docker
+- [ ] Edit readme.md folder structure overview
+- [ ] Fix the Pylint CI errors
+- [ ] Add A/B tests and some other GitActions (like formatting)
+- [ ] Look at the BIDS standard and see if reasonable
+- [ ] Testing of different steps 
+- [ ] Add visualization script to test the functionalities 
 

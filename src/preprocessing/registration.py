@@ -2,9 +2,6 @@ import os
 from nipype.interfaces import spm
 import itk
 
-# TODO: 
-# - check what the parameters_rigid.txt file means
-# - fix minor errors, check output of methods
 
 
 class Registration:
