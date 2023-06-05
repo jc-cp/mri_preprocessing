@@ -70,7 +70,7 @@ python3 main.py --config_path cfg/config.json
 ## Preprocessing
 
 <details>
-<summary>(N4) Bias Field Correction</summary>
+<summary>Bias Field Correction (N4)</summary>
 N4 bias field correction is a key preprocessing step for improving the quality of MRI images. It compensates for the intensity inhomogeneities, or bias field, which are inherent in MRI images due to variations in the sensitivity of the radio frequency coils and other factors. This variation can distort the intensity values of the voxels, making subsequent image analysis tasks challenging. The presented implementation methods include:
 
     1. An SITK variant, which is great but tends to be a little slow
@@ -90,7 +90,7 @@ Usually refers to the process of reducing the number of levels in an image or si
 </details>
 
 <details>
-<summary>3d to 2D Conversion</summary>
+<summary>Conversion (3D to 2D)</summary>
 Used when the memory to train a 3D model is limited; or when scarce amount of data. Attention: make sure to co-register the scans beforehand, so when the axial 2D slices are created the iteration is over the same axis.
 </details>
 
@@ -216,4 +216,5 @@ Skull stripping is a critical pre-processing step in the analysis of neuroimagin
 - [ ] Look at the BIDS standard and see if reasonable
 - [ ] Testing of different steps 
 - [ ] Add visualization script to test the functionalities 
+- [ ] Do an overall method to readme check for completeness
 
