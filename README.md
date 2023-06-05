@@ -196,13 +196,13 @@ Skull stripping is a critical pre-processing step in the analysis of neuroimagin
 - [ ] Recheck slice order and the time acquisition used in the slice timing correction -- should match your actual MRI data acquisition parameters
 - [ ] Implement intensity normalization option from https://github.com/jcreinhold/intensity-normalization
 - [ ] Check output from spm registration
-- [ ] Check how to make parameter file for registration modular, hoe to properly get it 
+- [ ] Check how to make parameter file for registration modular, how to properly get it 
 - [ ] Check output from the libraries in resmapling
 - [ ] Implement option for HDBET skull stripping and add to the installation
-- [ ] Implement the DICOM to NIFTI conversion with checks 
-- [ ] Rethink and implement the image loading class
-- [ ] Rethink and implement the image saving class
-- [ ] Finalise the list of steps in the pipeline, taking into accont the order 
+- [x] Implement the DICOM to NIFTI conversion with checks 
+- [x] Rethink and implement the image loading class
+- [x] Rethink and implement the image saving class
+- [ ] Finalise the list of steps in the pipeline, taking into account the order 
 - [ ] Have one default config.json in proper format
 - [ ] Have a fmri template JSON
 - [ ] Have a smri template JSON
