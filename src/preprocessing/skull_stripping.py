@@ -1,5 +1,9 @@
 import SimpleITK as sitk
 
+
+# TODO:
+# - add the option for HDBET and edit readme accordingly for installation
+
 class SkullStripping:
     def __init__(self, config: dict):
         self.config = config

@@ -1,104 +1,75 @@
-import SimpleITK as sitk
-from skimage.restoration import denoise_nl_means, estimate_sigma, denoise_tv_chambolle, denoise_bilateral, denoise_wavelet
-from skimage.util import img_as_float
+from skimage.restoration import denoise_nl_means, denoise_tv_chambolle, denoise_bilateral, denoise_wavelet
+from skimage.filters import gaussian
 import numpy as np
+from scipy.signal import medfilt
 
 class Denoising:
     def __init__(self, config: dict):
         self.config = config
+        self.methods = {
+            "gaussian": self.gaussian_denoising,
+            "nlm": self.nlm_denoising,
+            "tv": self.tv_denoising,
+            "aniso_diffusion": self.aniso_diffusion_denoising,
+            "wavelet": self.wavelet_denoising,
+            "medfilt": self.medfilt_denoising
+        }
 
     def run(self, image):
-        if self.config['methods']['gaussian']['enabled']:
-            return self.gaussian_denoising(image)
-        if self.config['methods']['nlm']['enabled']:
-            return self.nlm_denoising(image)
-        if self.config['methods']['tv']['enabled']:
-            return self.tv_denoising(image)
-        if self.config['methods']['aniso_diffusion']['enabled']:
-            return self.aniso_diffusion(image)
-        if self.config['methods']['wavelet']['enabled']:
-            return self.wavelet_denoising(image)
-        else:
-            raise ValueError(f"Invalid method {self.config['methods']}")
+        for method_name, method in self.methods.items():
+            if self.config['methods'][method_name]['enabled']:
+                image = method(image, self.config['methods'][method_name])
+        return image
 
-    def gaussian_denoising(self, image):
-        # Get parameters from config
-        sigma = self.config['methods']['gaussian']['sigma']
-
-        # Perform Gaussian smoothing
-        smoothed = sitk.SmoothingRecursiveGaussian(image, sigma)
+    def gaussian_denoising(self, image, config):
+        sigma = config.get('sigma_gaussian', 1)
+        smoothed = gaussian(image, sigma=sigma)
 
         return smoothed
 
-    def nlm_denoising(self, image):
-        # Get parameters from config
-        search_radius = self.config['methods']['nlm']['search_radius']
-        patch_radius = self.config['methods']['nlm']['patch_radius']
-        channel_axis = self.config['methods']['nlm']['channel_axis']
+    def nlm_denoising(self, image, config):
+        search_radius = config.get('search_radius', 3)
+        patch_radius = config.get('patch_radius', 1)
 
-
-        # Convert SimpleITK Image to NumPy array for skimage processing
-        image_array = sitk.GetArrayFromImage(image)
-
-        # Estimate the noise standard deviation from the image
-        sigma_est = np.mean(estimate_sigma(image_array, channel_axis=channel_axis))
+        std_dev = np.std(image)
 
         # Perform non-local means denoising
-        denoised_array = denoise_nl_means(image_array, h=1.15 * sigma_est, fast_mode=True,
+        denoised = denoise_nl_means(image, h=1.15 * std_dev, fast_mode=True,
                                           patch_size=patch_radius, patch_distance=search_radius)
-
-        # Convert denoised NumPy array back to SimpleITK Image
-        denoised = sitk.GetImageFromArray(denoised_array)
 
         return denoised
     
-    def tv_denoising(self, image):
+    def tv_denoising(self, image, config):
         # Get parameters from config
-        weight = self.config['methods']['tv']['weight']
-        channel_axis = self.config['methods']['tv']['channel_axis']
-
-        # Convert SimpleITK Image to NumPy array for skimage processing
-        image_array = sitk.GetArrayFromImage(image)
-        image_array = img_as_float(image_array)
+        weight = config.get('weight', 0.1)
+        channel_axis = config.get('channel_axis', 3)
 
         # Perform total variation denoising
-        denoised_array = denoise_tv_chambolle(image_array, weight=weight, channel_axis=channel_axis)
-
-        # Convert denoised NumPy array back to SimpleITK Image
-        denoised = sitk.GetImageFromArray(denoised_array)
+        denoised = denoise_tv_chambolle(image, weight=weight, channel_axis=channel_axis)
 
         return denoised
 
-    def aniso_diffusion(self, image):
+    def aniso_diffusion_denoising(self, image, config):
         # Get parameters from config
-        sigma_range = self.config['methods']['aniso_diffusion']['sigma_range']
-        sigma_spatial = self.config['methods']['aniso_diffusion']['sigma_spatial']
-
-        # Convert SimpleITK Image to NumPy array for skimage processing
-        image_array = sitk.GetArrayFromImage(image)
-        image_array = img_as_float(image_array)
+        sigma_range = config.get('sigma_range')
+        sigma_spatial = config.get('sigma_spatial')
 
         # Perform bilateral denoising (Perona-Malik anisotropic diffusion)
-        denoised_array = denoise_bilateral(image_array, sigma_color=sigma_range, sigma_spatial=sigma_spatial, multichannel=True)
-
-        # Convert denoised NumPy array back to SimpleITK Image
-        denoised = sitk.GetImageFromArray(denoised_array)
+        denoised = denoise_bilateral(image, sigma_color=sigma_range, sigma_spatial=sigma_spatial, multichannel=True)
 
         return denoised
 
-    def wavelet_denoising(self, image):
+    def wavelet_denoising(self, image, config):
         # Get parameters from config
-        wavelet = self.config['methods']['wavelet']['wavelet']
-        sigma = self.config['methods']['wavelet']['sigma']
-
-        # Convert SimpleITK Image to NumPy array for skimage processing
-        image_array = sitk.GetArrayFromImage(image)
-        image_array = img_as_float(image_array)
+        wavelet = config.get('wavelet', 'db1')
+        sigma = config.get('sigma_wavelet', None)
 
         # Perform wavelet denoising
-        denoised_array = denoise_wavelet(image_array, multichannel=True, convert2ycbcr=True, wavelet=wavelet, sigma=sigma)
-
-        # Convert denoised NumPy array back to SimpleITK Image
-        denoised = sitk.GetImageFromArray(denoised_array)
+        denoised = denoise_wavelet(image, multichannel=True, convert2ycbcr=True, wavelet=wavelet, sigma=sigma, method='BayesShrink')
 
         return denoised
+    
+    def medfilt_denoising(self, image, config):
+        # Get parameters from config
+        kernel_size = config.get('kernel_size', 3)
+        return medfilt(image, kernel_size)

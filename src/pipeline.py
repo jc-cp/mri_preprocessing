@@ -4,6 +4,7 @@ import logging
 # Steps
 from preprocessing.denoising import Denoising
 from preprocessing.skull_stripping import SkullStripping
+from preprocessing.registration import Registration
 
 # Utils
 from utils.image_conversion import ImageConversion
@@ -25,6 +26,7 @@ class Pipeline:
         # TODO: check the order of the pre-processing
         # Map step names to classes, attention: the order here becomes relevant!
         self.step_classes = {
+            'registration': Registration,
             'denoising': Denoising,
             'skull_stripping': SkullStripping,
             # add other preprocessing steps...

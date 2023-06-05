@@ -68,6 +68,27 @@ python3 main.py --config_path cfg/config.json
 **Susceptibility Weighted Imaging (SWI):** SWI is an MRI technique which exploits the susceptibility differences between tissues. Pre-processing steps might include phase unwrapping and filtering, and phase mask creation.
 
 ## Preprocessing
+
+<details>
+<summary>(N4) Bias Field Correction</summary>
+N4 bias field correction is a key preprocessing step for improving the quality of MRI images. It compensates for the intensity inhomogeneities, or bias field, which are inherent in MRI images due to variations in the sensitivity of the radio frequency coils and other factors. This variation can distort the intensity values of the voxels, making subsequent image analysis tasks challenging. The presented implementation methods include:
+
+    1. An SITK variant, which is great but tends to be a little slow
+    2. An LapGM implementation
+
+</details>
+
+<details>
+<summary>Binning</summary>
+Usually refers to the process of reducing the number of levels in an image or signal. This can often be thought of as a type of quantization. For instance, if you have an image with a bit depth of 16 (meaning there are 65,536 possible levels for each pixel), you might reduce this to 8 bits (256 levels) or less. Some common binning strategies include:
+
+    Fixed-Width Binning: The range of the data is divided into a set of equally spaced bins. Each bin has the same width. This is the most common binning strategy and is typically used when the data is uniformly distributed.
+
+    Adaptive Binning: The bin widths are not constant and are determined based on the data. This strategy is often used when the data has a skewed distribution. There are various methods for determining the bin widths, such as Freedman-Diaconis rule or Scott's rule.
+
+    Quantile Binning: The data is divided into a set of equal-sized bins, where each bin contains approximately the same number of data points. This is especially useful when dealing with skewed data or when it's important to rank data points relative to one another.
+</details>
+
 <details>
 <summary>Denoising</summary>
 Denoising of MRI images can be accomplished by numerous methods, each with its strengths and weaknesses. Here are two methods that are commonly used:
@@ -86,13 +107,20 @@ It's important to note that the best method to use depends on the specifics of y
 </details>
 
 <details>
+<summary>Filtering</summary>
+
+    This usually refers to the process of making the image less detailed or blurry, which can help in reducing high-frequency noise and making the image interpretation simpler. Methods for smoothing include Gaussian smoothing, Median Filtering, and Bilateral Filtering. Attention: While some methods like Gaussian smoothing or NLM can be used for both denoising and smoothing, the goals and the parameters used might be different. For example, in denoising, you might want to preserve more details and thus use a smaller parameter for the extent of smoothing, while for smoothing, you might want to reduce more details and thus use a larger parameter.
+
+    The implemenation of otsu_filtering applies the calcualted threshold to the input image to create a binary image: all pixels with intensities above the threshold are set to 1, the others to 0.
+
+</details>
+
+
+<details>
 <summary>Motion Correction</summary>
-Motion correction, or realignment, also known as "intrasession registration" or "intra-subject registration" is used to align all the volumes of the same subject in a time series to a reference volume. It is a critical preprocessing step in MRI analysis, especially for functional MRI (fMRI) where a series of images are collected over time. The subject's head movement during the scanning can introduce substantial errors and bias in the subsequent analysis. Here are two commonly used methods:
 
-    Volume-Realignment: This method estimates the six parameters of rigid-body spatial transformations (3 translations and 3 rotations) that best align all 3D volumes to a reference volume (typically the first volume or the mean of all volumes).
+    Motion correction, also known as "intrasession registration" or "intra-subject registration" is used to align all the volumes of the same subject in a time series to a reference volume. It is a critical preprocessing step in MRI analysis, especially for functional MRI (fMRI) where a series of images are collected over time. The subject's head movement during the scanning can introduce substantial errors and bias in the subsequent analysis. A specific method is Volume-Realignment, which estimates the six parameters of rigid-body spatial transformations (3 translations and 3 rotations) that best align all 3D volumes to a reference volume (typically the first volume or the mean of all volumes).
 
-    Slice-Timing Realignment: This method is specifically for correcting the timing difference among slices within each volume. As most fMRI scans acquire different slices at different times within each TR (Repetition Time), this can lead to spatial-temporal misalignment. It can be corrected by resampling the signal at each voxel to a reference time point, using slice-timing information.
-Also, note that slice timing correction is usually performed before motion correction in the fMRI preprocessing pipeline.
 </details>
 
 <details>
@@ -107,6 +135,27 @@ Normalization is an essential pre-processing step in image analysis. It helps to
 </details>
 
 <details>
+<summary>Registration</summary>
+
+    Registration is a broader term that refers to the process of aligning different datasets into one common space. In MRI, this is often used to align an individual's anatomical scan with a standard template (like the MNI template), allowing for group analyses across individuals. It could also refer to the process of aligning an individual's functional images with their own anatomical scan, which ensures that the functional data can be accurately overlaid onto the correct anatomical structures.
+
+    When performing the registration step for MRI (pediatric) brain images, please access the NIHPD template website for brain volumes from the 4.5 to 18.5y age range (https://www.mcgill.ca/bic/software/tools-data-analysis/anatomical-mri/atlases/nihpd). The download files cna be accessed here (http://www.bic.mni.mcgill.ca/~vfonov/nihpd/obj1/). Please include / copy the dowloaded templates to the "/mri-preprocessing/data/registration_templates/" folder if you want to enable the registration setp.
+
+</details>
+
+
+<details>
+<summary>Resampling</summary>
+    
+    In the MRI preprocessing pipeline, resampling is often done after the registration step. The idea is to bring all the images to the same standard space (like MNI space) and the same resolution, so that each voxel corresponds to the same physical location across subjects. In terms of implementation, various tools can be used for resampling, such as:
+
+        1. FSL's FLIRT
+        2.ANTs (Advanced Normalization Tools)
+    
+    Remember that ANTs' ResampleImageBySpacing changes the spacing between pixels/voxels in the image, whereas FLIRT changes the resolution to an isotropic voxel size
+</details>
+
+<details>
 <summary>Skull Stripping</summary>
 Skull stripping is a critical pre-processing step in the analysis of neuroimaging data. Several methods have been developed for this purpose, with varying degrees of complexity and performance. Here are three common methods:
 
@@ -115,4 +164,11 @@ Skull stripping is a critical pre-processing step in the analysis of neuroimagin
     Morphological Operations-Based Skull Stripping: This method involves a sequence of morphological operations, such as dilation, erosion, opening, and closing. The idea is to remove small connected components and holes in the brain image, which are likely to represent non-brain tissues.
 
     Atlas-Based Skull Stripping: This method uses a pre-defined atlas or template of the brain, which is registered to the subject's image. The atlas typically includes a binary mask that defines the brain region. Once the atlas is aligned with the subject's image, the mask can be applied to remove the skull.
+</details>
+
+<details>
+<summary>Slice-Timing Realignment</summary>
+
+    Depending on the scanner setup, the slices os MRIs could be acquired sequentially or in an interleaved fashion. This means that there is a small delay between when the first slice is acquired and when the last slice is acquired. As most fMRI scans acquire different slices at different times within each TR (Repetition Time), this can lead to spatial-temporal misalignment. However, when analyzing the data, it is often assumed that all slices from a given volume are acquired simultaneously. Slice-timing is specifically for correcting the timing difference among slices within each volume. It can be corrected by resampling the signal at each voxel to a reference time point, using the slice-timing information. Also note that slice timing correction is usually performed before motion correction in the overall fMRI preprocessing pipeline.
+
 </details>

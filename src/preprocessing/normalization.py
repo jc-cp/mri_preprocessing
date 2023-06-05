@@ -2,6 +2,8 @@ import numpy as np
 import SimpleITK as sitk
 from skimage import exposure
 
+# TODO: apply the option to use the intensity-normalization lib https://github.com/jcreinhold/intensity-normalization
+
 class Normalization:
     def __init__(self, config: dict):
         self.config = config
