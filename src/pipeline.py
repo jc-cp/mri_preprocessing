@@ -37,7 +37,7 @@ class Pipeline:
         self.image_loading = ImageLoading(self.config['image_loading'])
         self.image_conversion = ImageConversion(self.config['image_conversion'])
         self.image_saving = ImageSaving(self.config['image_saving'])
-        self.image_visualization = ImageVisualization(self.config['visualization'])
+        self.image_visualization = ImageVisualization(self.config['image_visualization'])
 
     def run(self):
         # Set up logging
@@ -46,18 +46,24 @@ class Pipeline:
 
         # Load image
         image_data, input_paths = self.image_loading.run()
+        print(f"Loaded {len(image_data)} images")  # Debugging print
 
         # Convert image if necessary
         if self.config['image_conversion']['enabled']:
             image_data = [self.image_conversion.run(image) for image in image_data]
+            print(f"Converted {len(image_data)} images")  # Debugging print
+
+        # Store initial state in dictionary
+        image_data_dict = {}
+        image_data_dict = {"initial": (image_data, image_data.copy())}
 
         # Apply steps
-        image_data_dict = {}
         original_image_data = image_data    # A copy for comparison through visualization 
         for step_name, StepClass in self.step_classes.items():
             if self.config[step_name]['enabled']:
                 try:
                     step_instance = StepClass(self.config[step_name])
+                    original_image_data = image_data.copy()
                     image_data = [step_instance.run(image) for image in image_data]
                     image_data_dict[step_name] = (original_image_data, image_data)
                     logging.info(f"Successfully applied {step_name}.")
@@ -68,5 +74,5 @@ class Pipeline:
         self.image_saving.run(image_data, input_paths)
         
         # Visualization if enabled
-        if self.config['visualization']['enabled']:
+        if self.config['image_visualization']['enabled']:
             self.image_visualization.run(image_data_dict)

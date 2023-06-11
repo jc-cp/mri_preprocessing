@@ -5,6 +5,7 @@ import nibabel as nib
 class ImageSaving:
     def __init__(self, config: dict):
         self.output_dir = config['output_dir']
+        self.input_dir = config['input_dir']
 
     def run(self, images, input_paths):
         for image, input_path in zip(images, input_paths):

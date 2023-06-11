@@ -19,18 +19,20 @@ This repository aims to present a general, customazible pipeline for MRI images 
 |-- /src
 |   |-- /preprocessing
 |   |   |-- __init__.py
+|   |   |-- bias_field_correction.py
+|   |   |-- binning.py
+|   |   |-- conversion3d_to_2d.py
 |   |   |-- denoising.py
-|   |   |-- skull_stripping.py
-|   |   |-- slice_timing_correction.py
+|   |   |-- feature_extraction.py
+|   |   |-- filtering.py
 |   |   |-- motion_correction.py
 |   |   |-- normalization.py
+|   |   |-- quality_control.py
+|   |   |-- registration.py
 |   |   |-- resampling.py
 |   |   |-- segmentation.py
-|   |   |-- registration.py
-|   |   |-- bias_field_correction.py
-|   |   |-- spatial_smoothing.py
-|   |   |-- feature_extraction.py
-|   |   |-- quality_control.py
+|   |   |-- skull_stripping.py
+|   |   |-- slice_timing_correction.py
 |   |-- /utils
 |   |   |-- __init__.py
 |   |   |-- image_loading.py

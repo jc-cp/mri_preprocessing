@@ -17,7 +17,7 @@ class ImageLoading:
     def __init__(self, config: dict):
         self.file_path = config.get('file_path', None)
         self.recursive = config.get('recursive', False)
-        self.paths = config.get('image_paths', None)
+        self.paths = config.get('input_dir', None)
 
     def run(self):
         image_paths = self._get_image_paths()
@@ -32,6 +32,7 @@ class ImageLoading:
                 elif image_path.lower().endswith('.nii') or image_path.lower().endswith('.gz'):
                     print('Loading Nifti image.')
                     image = nib.load(image_path)
+                    image = nib.as_closest_canonical(image) # Reorient to closest canonical (RAS)
                 else:
                     raise ValueError(f"Unsupported file extension in file {image_path}")
                 images.append(image)

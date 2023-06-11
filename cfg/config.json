@@ -1,12 +1,26 @@
 
-{   "image_visualization":{
+{   
+    "image_conversion":{
+        "enabled": false
+    },    
+    "image_loading":{
         "enabled": true,
-        "slice_index": 50
+        "file_path": "/home/jc053/GIT/mri-preprocessing/data/input/example/MRHead.csv",
+        "input_dir": "/home/jc053/GIT/mri-preprocessing/data/input/example/",
+        "recursive": true
     },
-
-    
-    "bias_field_correction": {
+    "image_saving":{
         "enabled": true,
+        "input_dir": "/home/jc053/GIT/mri-preprocessing/data/input/example/",
+        "output_dir": "/home/jc053/GIT/mri-preprocessing/data/output/example"
+    },
+    "image_visualization":{
+        "enabled": true,
+        "slice_index": 140,
+        "output_file": "/home/jc053/GIT/mri-preprocessing/data/output/example/output_file.png"
+    },
+    "bias_field_correction": {
+        "enabled": false,
         "methods": {
             "itk":{
                 "enabled": false,
@@ -33,7 +47,7 @@
         }
     },
     "denoising": {
-        "enabled": true,
+        "enabled": false,
         "methods": {
             "gaussian":{
                 "enabled": true,
@@ -67,7 +81,7 @@
         }
     },
     "filtering":{
-        "enabled": true,
+        "enabled": false,
         "methods":{
             "gaussian": {
                 "enabled": true,
@@ -94,7 +108,7 @@
         }
     },
     "normalization": {
-        "enabled": true,
+        "enabled": false,
         "methods": {
             "intensity": {        
                 "enabled": true
@@ -113,7 +127,7 @@
         "expected_voxel_size": [1.0, 1.0, 1.0]
     },
     "registration":{
-        "enabled": true,
+        "enabled": false,
         "methods":{
             "spm":{
                 "enabled": false,
@@ -129,7 +143,7 @@
         }
     },
     "resampling":{
-        "enabled": true,
+        "enabled": false,
         "methods":{
             "fsl":{
                 "enabled": true,
