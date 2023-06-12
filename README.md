@@ -222,4 +222,4 @@ Skull stripping is a critical pre-processing step in the analysis of neuroimagin
 - [ ] Finalize SPM registration implementation
 - [ ] Finalize FSL registration implementation
 - [ ] Finalize ANTS rescaling implementation
-
+- [ ] Check orientation of images as rescaling iterates in the z axis
