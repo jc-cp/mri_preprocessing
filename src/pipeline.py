@@ -5,6 +5,11 @@ import logging
 from preprocessing.denoising import Denoising
 from preprocessing.skull_stripping import SkullStripping
 from preprocessing.registration import Registration
+from preprocessing.resampling import Resampling
+from preprocessing.bias_field_correction import BiasFieldCorrection
+from preprocessing.normalization import Normalization
+from preprocessing.filtering import Filtering
+from preprocessing.binning import Binning
 
 # Utils
 from utils.image_conversion import ImageConversion
@@ -28,8 +33,13 @@ class Pipeline:
         # Map step names to classes, attention: the order here becomes relevant!
         self.step_classes = {
             'registration': Registration,
-            'denoising': Denoising,
+            'resampling': Resampling, 
             'skull_stripping': SkullStripping,
+            'bias_field_correction': BiasFieldCorrection,
+            'normalization': Normalization,
+            'filtering': Filtering,
+            'denoising': Denoising,
+            'binning': Binning
             # add other preprocessing steps...
         }
 

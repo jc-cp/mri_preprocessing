@@ -1,52 +1,59 @@
 from nipype.interfaces.fsl import FLIRT
 from nipype.interfaces.ants import ResampleImageBySpacing
 import os
-
+from scipy.ndimage import zoom
+import nibabel as nib
+import numpy as np
 
 class Resampling:
     def __init__(self, config: dict):
         self.config = config
+        self.methods = {
+            "ants": self.resample_with_ants,
+            "scipy": self.resample_with_scipy
+        }
 
-    def run(self, image: str):
-        # Check which method is enabled in the configuration
-        if self.config['methods']['fsl']['enabled']:
-            return self.resample_with_flirt(image)
-        elif self.config['methods']['ants']['enabled']:
-            return self.resample_with_ants(image)
-        else:
-            raise ValueError("No valid resampling method enabled in configuration.")
+    def run(self, image, path: str):
+        for method_name, method in self.methods.items():
+            if self.config['methods'][method_name]['enabled']:
+                image = method(image, path)
+        return image
 
-    def resample_with_flirt(self, image: str):
+    def resample_with_ants(self, image, path: str):
         # Ensure the image file exists
-        if not os.path.exists(image):
-            raise FileNotFoundError(f"No file found at {image}")
-
-        # Define the FLIRT instance for resampling
-        flirt = FLIRT(in_file=image,
-                      reference=self.config['methods']['fsl']['reference'],
-                      apply_isoxfm=self.config['methods']['fsl']['resolution'],
-                      interp=self.config['methods']['fsl']['interp']
-                      )
-        try:
-            result = flirt.run()
-        except Exception as e:
-            raise RuntimeError(f"FSL FLIRT failed with error: {e}")
-
-        return result.outputs.output_file
-
-    def resample_with_ants(self, image: str):
-        # Ensure the image file exists
-        if not os.path.exists(image):
-            raise FileNotFoundError(f"No file found at {image}")
+        if not os.path.exists(path):
+            raise FileNotFoundError(f"No file found at {path}")
 
         # Define the ANTs resampling instance
-        resample = ResampleImageBySpacing(dimension=3,
-                                          output_spacing=self.config['methods']['ants']['spacing'],
-                                          interpolator=self.config['methods']['ants']['interp'],
-                                          input_image=image)
+        resample = ResampleImageBySpacing(dimension=3)
+        resample.inputs.input_image = path
+        resample.inputs.out_spacing = self.config['methods']['ants']['spacing']
+        resample.inputs.apply_smoothing = self.config['methods']['ants']['smoothing'] 
+   
         try:
             result = resample.run()
+            print(type(result))
         except Exception as e:
             raise RuntimeError(f"ANTs ResampleImageBySpacing failed with error: {e}")
 
-        return result.outputs.output_image
+        return result.outputs
+
+    def resample_with_scipy(self, image, path):
+        '''
+        order=0: Nearest-neighbor interpolation
+        order=1: Linear interpolation (bilinear for 2D images, trilinear for 3D images)
+        order=2: Quadratic (cubic for 2D images, etc.)
+        order=3: Cubic (quartic for 2D images, etc.)
+        '''
+        numpy_img = image.get_fdata()
+        scale_factor = self.config['methods']['scipy']['scale_factor']
+        order = self.config['methods']['scipy']['order']
+
+        rescaled_image = zoom(numpy_img, scale_factor, order=order)
+        # Define affine transformation
+        affine = np.eye(4)
+
+        # Create the Nibabel image
+        nifti_rescaled_image = nib.Nifti1Image(rescaled_image, affine)
+
+        return nifti_rescaled_image

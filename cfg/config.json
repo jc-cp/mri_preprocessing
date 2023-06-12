@@ -127,7 +127,7 @@
         "expected_voxel_size": [1.0, 1.0, 1.0]
     },
     "registration":{
-        "enabled": true,
+        "enabled": false,
         "methods":{
             "spm":{
                 "enabled": false,
@@ -138,22 +138,27 @@
                 "enabled": false, 
                 "template": "/home/jc053/GIT/mri-preprocessing/data/registration_templates/nihpd_asym_04.5-18.5_nifti/nihpd_asym_04.5-18.5_t2w.nii", 
                 "output_path": "/home/jc053/GIT/mri-preprocessing/data/output"
+            },
+            "fsl":{
+                "enabled": false,
+                "resolution": 1.0,
+                "reference": "/home/jc053/GIT/mri-preprocessing/data/registration_templates/nihpd_asym_04.5-18.5_nifti/nihpd_asym_04.5-18.5_t2w.nii",
+                "interp": "trilinear"
             }
         }
     },
     "resampling":{
-        "enabled": false,
+        "enabled": true,
         "methods":{
-            "fsl":{
-                "enabled": true,
-                "resolution": 2.0,
-                "reference": null,
-                "interp": "trilinear"
-            },
             "ants":{
+                "enabled": false,
+                "spacing": [1.0, 1.0, 1.0],
+                "smoothing": true
+            },
+            "scipy":{
                 "enabled": true,
-                "spacing": [2.0, 2.0, 2.0],
-                "interp": "Linear"
+                "scale_factor": 3.0,
+                "order": 0
             }
         }
     },

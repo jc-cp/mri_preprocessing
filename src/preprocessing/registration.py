@@ -1,5 +1,6 @@
 import os
 from nipype.interfaces import spm
+from nipype.interfaces.fsl import FLIRT
 import itk
 from itk import itkMINCImageIOPython
 import nibabel as nib
@@ -19,7 +20,6 @@ class Registration:
             if self.config['methods'][method_name]['enabled']:
                 image = method(image, path)
         return image
-
 
     def itk_registration(self, image, path):
         template = self.config['methods']['itk']['template']
@@ -66,8 +66,6 @@ class Registration:
         else:
             raise FileNotFoundError('File has not .nii suffix on it!')
 
-
-
     def spm_registration(self, image, path):
         # Ensure the image file exists
         if not os.path.exists(path):
@@ -75,8 +73,8 @@ class Registration:
         
         template = self.config['methods']['spm']['template']
 
-        nii_path = convert_nii_gz_to_nii(path)
-        deformation_file_path = spm_segmentation(image, path)
+        nii_path = self.convert_nii_gz_to_nii(path)
+        deformation_file_path = self.spm_segmentation(image, path)
         
         # Define the SPM Normalize12 instance for registration
         norm12 = spm.Normalize12(jobtype='estwrite',
@@ -93,44 +91,61 @@ class Registration:
 
         return result.outputs
     
-    
-def convert_nii_gz_to_nii(nii_gz_path):
-    # Load the .nii.gz file
-    img = nib.load(nii_gz_path)
+    def convert_nii_gz_to_nii(self, nii_gz_path):
+        # Load the .nii.gz file
+        img = nib.load(nii_gz_path)
 
-    # Derive the .nii file path from the .nii.gz file path
-    nii_path = nii_gz_path[:-3]  # Remove the '.gz' from the end
+        # Derive the .nii file path from the .nii.gz file path
+        nii_path = nii_gz_path[:-3]  # Remove the '.gz' from the end
 
-    # Save the image data to a .nii file
-    nib.save(img, nii_path)
+        # Save the image data to a .nii file
+        nib.save(img, nii_path)
 
-    return nii_path
+        return nii_path
 
-def spm_segmentation(self, image, path):
-    # Define the segmentation instance
-    segmentation = spm.NewSegment()
-    
-    # Set input file
-    segmentation.inputs.channel_files = path
-    
-    # Run segmentation
-    try:
-        seg_result = segmentation.run()
-    except Exception as e:
-        raise RuntimeError(f"SPM NewSegment failed with error: {e}")
-    
-    # Cleanup segmentation results
-    self.cleanup_segmentation_results(path)
-    
-    # Return the forward deformation file path
-    return seg_result.outputs
-
-def cleanup_segmentation_results(self, path):
-    dir_path = os.path.dirname(path)
-    pattern = "c*.nii"  # SPM segmentation results start with 'c'
-    files = glob.glob(os.path.join(dir_path, pattern))
-    for f in files:
+    def spm_segmentation(self, image, path):
+        # Define the segmentation instance
+        segmentation = spm.NewSegment()
+        
+        # Set input file
+        segmentation.inputs.channel_files = path
+        
+        # Run segmentation
         try:
-            os.remove(f)
-        except OSError:
-            print(f"Error: {f} : {os.strerror}")
+            seg_result = segmentation.run()
+        except Exception as e:
+            raise RuntimeError(f"SPM NewSegment failed with error: {e}")
+        
+        # Cleanup segmentation results
+        self.cleanup_segmentation_results(path)
+        
+        # Return the forward deformation file path
+        return seg_result.outputs
+
+    def cleanup_segmentation_results(self, path):
+        dir_path = os.path.dirname(path)
+        pattern = "c*.nii"  # SPM segmentation results start with 'c'
+        files = glob.glob(os.path.join(dir_path, pattern))
+        for f in files:
+            try:
+                os.remove(f)
+            except OSError:
+                print(f"Error: {f} : {os.strerror}")
+
+    def fsl_registration(self, image, path: str):
+            # Ensure the image file exists
+            if not os.path.exists(path):
+                raise FileNotFoundError(f"No file found at {path}")
+
+            # Define the FLIRT instance for resampling
+            flirt = FLIRT(in_file=image,
+                        reference=self.config['methods']['fsl']['reference'],
+                        apply_isoxfm=self.config['methods']['fsl']['resolution'],
+                        interp=self.config['methods']['fsl']['interp']
+                        )
+            try:
+                result = flirt.run()
+            except Exception as e:
+                raise RuntimeError(f"FSL FLIRT failed with error: {e}")
+
+            return result.outputs

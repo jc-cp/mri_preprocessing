@@ -5,18 +5,20 @@ import SimpleITK as sitk
 class SkullStripping:
     def __init__(self, config: dict):
         self.config = config
+        self.methods = {
+            "threshold": self.threshold_skull_stripping,
+            "morphological": self.morphological_skull_stripping,
+            "atlas": self.atlas_skull_stripping
+        }
 
-    def run(self, image):
-        if self.config['methods']['threshold']['enabled']:
-            return self.threshold_skull_stripping(image)
-        if self.config['methods']['morphological']['enabled']:
-            return self.morphological_skull_stripping(image)
-        if self.config['methods']['atlas']['enabled']:
-            return self.atlas_skull_stripping(image)
-        else:
-            raise ValueError(f"Invalid method {self.config['methods']}")
+    def run(self, image, path: str):
+        for method_name, method in self.methods.items():
+            if self.config['methods'][method_name]['enabled']:
+                image = method(image, path)
+        return image
 
-    def threshold_skull_stripping(self, image):
+
+    def threshold_skull_stripping(self, image, path):
         # Get parameters from config
         threshold = self.config['threshold']['value']
 
@@ -24,15 +26,14 @@ class SkullStripping:
         stripped = image > threshold
         return stripped
 
-    def morphological_skull_stripping(self, image):
+    def morphological_skull_stripping(self, image, path):
         # Perform morphological operations
         # Note: this is a simplified example and may need to be adapted
-        # for your specific use case
         binary_image = sitk.BinaryThreshold(image)
         stripped = sitk.BinaryMorphologicalClosing(binary_image)
         return stripped
 
-    def atlas_skull_stripping(self, image):
+    def atlas_skull_stripping(self, image, path):
         # Get parameters from config
         atlas_path = self.config['atlas']['path']
 
