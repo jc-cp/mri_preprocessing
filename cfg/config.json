@@ -127,18 +127,17 @@
         "expected_voxel_size": [1.0, 1.0, 1.0]
     },
     "registration":{
-        "enabled": false,
+        "enabled": true,
         "methods":{
             "spm":{
                 "enabled": false,
-                "template": null, 
-                "output_path": null
+                "template": "/home/jc053/GIT/mri-preprocessing/data/registration_templates/nihpd_asym_04.5-18.5_nifti/nihpd_asym_04.5-18.5_t2w.nii", 
+                "output_path": "/home/jc053/GIT/mri-preprocessing/data/output"
             },
             "itk":{
-                "enabled": true, 
-                "template": null, 
-                "output_path": null,
-                "create_subfolder": false
+                "enabled": false, 
+                "template": "/home/jc053/GIT/mri-preprocessing/data/registration_templates/nihpd_asym_04.5-18.5_nifti/nihpd_asym_04.5-18.5_t2w.nii", 
+                "output_path": "/home/jc053/GIT/mri-preprocessing/data/output"
             }
         }
     },

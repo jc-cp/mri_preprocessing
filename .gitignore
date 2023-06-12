@@ -159,3 +159,4 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 .idea/
 .vscode/*
+data/registration_templates/nihpd_asym_04.5-18.5_nifti/*

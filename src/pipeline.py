@@ -45,7 +45,7 @@ class Pipeline:
                             format='%(asctime)s - %(levelname)s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 
         # Load image
-        image_data, input_paths = self.image_loading.run()
+        image_data, image_paths = self.image_loading.run()
         print(f"Loaded {len(image_data)} images")  # Debugging print
 
         # Convert image if necessary
@@ -64,14 +64,14 @@ class Pipeline:
                 try:
                     step_instance = StepClass(self.config[step_name])
                     original_image_data = image_data.copy()
-                    image_data = [step_instance.run(image) for image in image_data]
+                    image_data = [step_instance.run(image, path) for image, path in zip(image_data, image_paths)]
                     image_data_dict[step_name] = (original_image_data, image_data)
                     logging.info(f"Successfully applied {step_name}.")
                 except Exception as e:
                     logging.error(f"Error applying {step_name}: {str(e)}")
                     raise e
                 
-        self.image_saving.run(image_data, input_paths)
+        self.image_saving.run(image_data, image_paths)
         
         # Visualization if enabled
         if self.config['image_visualization']['enabled']:

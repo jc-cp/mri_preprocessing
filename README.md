@@ -219,4 +219,5 @@ Skull stripping is a critical pre-processing step in the analysis of neuroimagin
 - [ ] Testing of different steps 
 - [x] Add visualization script to test the functionalities 
 - [ ] Do an overall method to readme check for completeness
+- [ ] Finalize SPM registration implementation
 
