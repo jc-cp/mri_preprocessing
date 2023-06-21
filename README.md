@@ -1,4 +1,17 @@
-# MRI customazible pre-processing pipeline
+<h1 align="center"> MRI customazible pre-processing pipeline </h1>
+<div align="center">
+<a href="https://github.com/jc-cp/mri-preprocessing" target="_blank"><img src="https://img.shields.io/github/stars/jc-cp/mri-preprocessing?style=social" alt="Stars Badge"/></a>
+<a href="https://github.com/jc-cp/mri-preprocessing/fork" target="_blank"><img src="https://img.shields.io/github/forks/jc-cp/mri-preprocessing?style=social" alt="Forks Badge"/></a>
+<a href="https://github.com/jc-cp/mri-preprocessing/stargazers" target="_blank"><img src="https://img.shields.io/github/watchers/jc-cp/mri-preprocessing?style=social" alt="Watchers Badge"/></a>
+<a href="https://github.com/jc-cp/mri-preprocessing" target="_blank"><img src="https://img.shields.io/github/repo-size/jc-cp/mri-preprocessing" alt="Repository size Badge"/></a>
+<a href="https://github.com/jc-cp/mri-preprocessing/commits/" target="_blank"><img src="https://img.shields.io/github/last-commit/jc-cp/mri-preprocessing" alt="Last commit Badge"/></a>
+<a href="https://github.com/jc-cp/mri-preprocessing/issues" target="_blank"><img src="https://img.shields.io/github/issues/jc-cp/mri-preprocessing" alt="Open issues Badge"/></a>
+<a href="https://github.com/jc-cp/mri-preprocessing/pulls" target="_blank"><img src="https://img.shields.io/github/issues-pr/jc-cp/mri-preprocessing" alt="Open pull requests Badge"/></a>
+<br>
+<a href="https://www.linkedin.com/in/juan-carlos-climent-pardo/" target="_blank"><img src="https://img.shields.io/badge/LinkedIn-blue?style=flat&logo=linkedin&color=blue" alt="LinkedIn Badge"/></a>
+<a href="https://github.com/jc-cp" target="_blank"><img src="https://img.shields.io/badge/GitHub-black?style=flat&logo=github&color=black" alt="GitHub Badge"/></a>
+</div>
+
 
 This repository aims to present a general, customazible pipeline for MRI images based on a single configuration file (in .json format) that has different flags and according to them, a certain pre-processing procedure with desired steps is performed. This would be a good approach to making a reusable and flexible system that can be used when dealing with MRI images, and which would allow researchers and engineers to easily experiment with different pre-processing steps to see which fits the specific application better. Furthermore, some templates are provided depending on the type of MRI scanning that was used, as these may require specific and different pre-processing steps (e.g. MRI may be based on structural (sMRI), functional (fMRI), diffusion tensor imaging (DTI), etc.).
 
