@@ -1,5 +1,5 @@
 import SimpleITK as sitk
-from skimage.filters import threshold_otsu
+from skimage import filters
 
 
 class Filtering:
@@ -39,7 +39,7 @@ class Filtering:
     
     def otsu_filtering(self, image):
         # Compute the threshold value with Otsu's method
-        thresh = threshold_otsu(image)
+        thresh = filters.threshold_otsu(image)
         
         # Apply the threshold to the image: all pixels with intensities above the threshold are set to 1, the others to 0
         binary = image > thresh
