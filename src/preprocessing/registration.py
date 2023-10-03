@@ -21,12 +21,7 @@ from nipype.interfaces.fsl import FLIRT
 
 class Registration:
     """
-    A class for performing image registration using various methods.
-
-    This class provides a `run` method that takes an image and a path to a template image
-    and returns the registered image.
-    The class can be configured using a dictionary of configuration parameters.
-
+    The main class for performing image registration.
     """
 
     def __init__(self, config: dict):
@@ -39,11 +34,16 @@ class Registration:
                 - methods (dict): A dictionary of registration methods and their parameters.
         """
         self.config = config
-        self.methods = {"itk": self.itk_registration, "spm": self.spm_registration}
+        self.methods = {
+            "itk": self.itk_registration,
+            "spm": self.spm_registration,
+            "sitk": self.sitk_registration,
+            "fsl": self.fsl_registration,
+        }
 
     def run(self, image, path: str):
         """
-        Registers an image to a template image using the configured registration methods.
+        Registers an image to a template image using the configured methods.
 
         Args:
             image: The image to register.
@@ -52,9 +52,11 @@ class Registration:
         Returns:
             The registered image.
         """
-        for method_name, method in self.methods.items():
+        for method_name in self.config["methods"]:
             if self.config["methods"][method_name]["enabled"]:
-                image = method(image, path)
+                func = self.methods.get(method_name, None)
+                if func:
+                    image = func(image, path)
         return image
 
     def itk_registration(self, image, path):
@@ -186,13 +188,12 @@ class Registration:
 
     def cleanup_segmentation_results(self, path):
         dir_path = os.path.dirname(path)
-        pattern = "c*.nii"  # SPM segmentation results start with 'c'
-        files = glob.glob(os.path.join(dir_path, pattern))
-        for f in files:
+        files = glob.glob(os.path.join(dir_path, "c*.nii"))
+        for file in files:
             try:
-                os.remove(f)
-            except OSError:
-                print(f"Error: {f} : {os.strerror}")
+                os.remove(file)
+            except OSError as e:
+                print(f"Error in file: {file} with error: {e.strerror}")
 
     def fsl_registration(self, image, path: str):
         # Ensure the image file exists
@@ -213,27 +214,23 @@ class Registration:
 
         return result.outputs
 
-    def sitk_registration(self, img_path: str, output_path: str):
+    def sitk_registration(self, _, img_path: str):
         template = self.config["methods"]["itk"]["template"]
-        output_path = self.config["methods"]["itk"]["output_path"]
 
-        print("Sikt registration ongoing...")
+        print("Intializing Sikt registration...")
         # Ensure the image file exists
         if not os.path.exists(template):
             raise FileNotFoundError(f"No file found at {template}")
 
-        fixed_img = itk.imread(template, itk.F)
+        fixed_img = sitk.ReadImage(template, sitk.sitkFloat32)
 
         if "nii" in img_path:
             # Call registration function
             image_id = img_path.split("/")[-1]
+            new_dir = self.prepare_output_directory(image_id)
 
             try:
-                moving_img = itk.imread(img_path, itk.F)
-
-                new_dir = output_path + "/" + image_id.split(".")[0]
-                if not os.path.exists(new_dir):
-                    os.makedirs(new_dir, exist_ok=True)
+                moving_img = sitk.ReadImage(img_path, sitk.sitkFloat32)
 
                 transform = sitk.CenteredTransformInitializer(
                     fixed_img,
@@ -258,15 +255,33 @@ class Registration:
                 registration_method.SetSmoothingSigmasPerLevel(smoothingSigmas=[2, 1, 0])
                 registration_method.SmoothingSigmasAreSpecifiedInPhysicalUnitsOn()
                 registration_method.SetInitialTransform(transform)
+                print("Sikt registration ongoing...")
                 final_transform = registration_method.Execute(fixed_img, moving_img)
 
-                sitk.WriteImage(
+                ### EDIT HERE ###
+                registered_image = sitk.Resample(
+                    moving_img,
+                    fixed_img,
                     final_transform,
-                    new_dir + "/" + image_id.split(".")[0] + "_registered" + ".nii.gz",
+                    sitk.sitkLinear,
+                    0.0,
+                    moving_img.GetPixelID(),
                 )
-
+                file_name = new_dir + "/" + image_id.split(".")[0] + "_registered" + ".nii.gz"
+                sitk.WriteImage(
+                    registered_image,
+                    fileName=file_name,
+                )
+                print("Sikt registration finished...")
+                return registered_image
             except (FileNotFoundError, IOError, RuntimeError) as error:
                 print(f"Cannot transform {image_id}, with error {error}.")
 
         else:
             raise FileNotFoundError("File has not .nii suffix on it!")
+
+    def prepare_output_directory(self, image_id):
+        output_path = self.config["methods"]["itk"]["output_path"]
+        new_dir = os.path.join(output_path, image_id.split(".")[0])
+        os.makedirs(new_dir, exist_ok=True)
+        return new_dir

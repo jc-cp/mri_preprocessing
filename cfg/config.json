@@ -131,24 +131,24 @@
         "methods":{
             "spm":{
                 "enabled": false,
-                "template": "/home/juanqui55/git/mri_preprocessing/data/registration_templates/nihpd_asym_04.5-18.5_nifti/nihpd_asym_04.5-18.5_t2w.nii", 
+                "template": "/home/juanqui55/git/mri_preprocessing/data/registration_templates/temp_head.nii.gz", 
                 "output_path": "/home/juanqui55/git/mri_preprocessing/data/output"
             },
             "itk":{
                 "enabled": false, 
-                "template": "/home/juanqui55/git/mri_preprocessing/data/registration_templates/nihpd_asym_04.5-18.5_nifti/nihpd_asym_04.5-18.5_t2w.nii", 
+                "template": "/home/juanqui55/git/mri_preprocessing/data/registration_templates/temp_head.nii.gz", 
                 "output_path": "/home/juanqui55/git/mri_preprocessing/data/output"
             },
             "fsl":{
                 "enabled": false,
                 "resolution": 1.0,
-                "reference": "/home/juanqui55/git/mri_preprocessing/data/registration_templates/nihpd_asym_04.5-18.5_nifti/nihpd_asym_04.5-18.5_t2w.nii",
+                "reference": "/home/juanqui55/git/mri_preprocessing/data/registration_templates/temp_head.nii.gz",
                 "interp": "trilinear"
             },
             "sitk":{
                 "enabled": true,
                 "reference": "/home/juanqui55/git/mri_preprocessing/data/registration_templates/temp_head.nii.gz",
-                "output_path": "/home/juanqui55/git/mri_preprocessing/data/output"
+                "output_path": "/home/juanqui55/git/mri_preprocessing/data/output/registration_outputs"
 
             }
         }

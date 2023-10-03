@@ -67,13 +67,12 @@ class Pipeline:
         )
         # Read configuration
         try:
-            with open(config_file, "r", encoding="utf-8") as f:
-                self.config = json.load(f)
+            with open(config_file, "r", encoding="utf-8") as file:
+                self.config = json.load(file)
             print("Successfully loaded configuration file.")
         except (IOError, FileNotFoundError) as error:
             print(f"Error loading configuration file: {error}")
 
-        # TODO: check the order of the pre-processing
         # Map step names to classes, attention: the order here becomes relevant!
         self.step_classes = {
             "registration": Registration,
@@ -96,6 +95,9 @@ class Pipeline:
     def run(self):
         """
         Runs the preprocessing pipeline on the specified images.
+
+        Raises:
+            ExceptionGroup: If any exception occurs during pipeline execution.
         """
 
         try:
@@ -110,17 +112,54 @@ class Pipeline:
             print(f"Error running pipeline: {error}")
 
     def load_images(self):
+        """
+        Loads medical images from DICOM or NIFTI files.
+
+        Returns:
+            A tuple of loaded medical images and their file paths.
+
+        Raises:
+            ValueError: If `file_path` or `image_paths` is not specified in the configuration.
+        """
         image_data, image_paths = self.image_loading.run()
         print(f"Loaded {len(image_data)} images!")
         return image_data, image_paths
 
     def convert_images(self, image_data):
+        """
+        Converts medical images between DICOM and NIFTI formats.
+
+        Args:
+            image_data (list): A list of medical images in either DICOM or NIFTI format.
+
+        Returns:
+            A list of converted medical images in the opposite format.
+
+        Raises:
+            ValueError: If `enabled` is not specified in the configuration.
+        """
         if self.config["image_conversion"]["enabled"]:
             image_data = [self.image_conversion.run(image) for image in image_data]
             print(f"Converted {len(image_data)} images.")
         return image_data
 
     def apply_steps(self, image_data, image_paths):
+        """
+        Applies a series of processing steps to medical images.
+
+        Args:
+            image_data (list): A list of medical images to process.
+            image_paths (list): A list of file paths corresponding to the medical images.
+
+        Returns:
+            A tuple of lists containing the original and processed medical images,
+            and a list of applied processing steps.
+
+        Raises:
+            ValueError: If `enabled` is not specified in the configuration.
+            ValueError: If `image_data` or `image_paths` is empty.
+            ValueError: If an error occurs during processing.
+        """
         original_data_by_step = []
         processed_data_by_step = []
         applied_steps = []
@@ -129,7 +168,7 @@ class Pipeline:
             if self.config[step_name]["enabled"]:
                 try:
                     step_instance = step_class(self.config[step_name])
-                    print(f"Starting with pre-processing step: {step_instance}")
+                    print(f"Starting with pre-processing step: {step_name}")
                     # Make a deep copy of the original image data
                     original_image_data = [self.copy_nifti_image(img) for img in image_data]
                     image_data = [
@@ -139,22 +178,53 @@ class Pipeline:
                     # Store the data for visualization
                     original_data_by_step.append(original_image_data)
                     processed_data_by_step.append(image_data)
-                    applied_steps.append(step_instance)
-                    print(f"Successfully applied {step_instance}.")
+                    applied_steps.append(step_name)
+                    print(f"Successfully applied {step_name}.")
                 except (ValueError, IOError) as error:
                     print(f"Error applying {step_name}, with error {error}.")
         return original_data_by_step, processed_data_by_step, applied_steps
 
     def save_images(self, image_data, image_paths):
+        """
+        Saves medical images to DICOM or NIFTI files.
+
+        Args:
+            image_data (list): A list of medical images to save.
+            image_paths (list): A list of file paths corresponding to the medical images.
+
+        Raises:
+            ValueError: If `enabled` is not specified in the configuration.
+        """
         self.image_saving.run(image_data, image_paths)
 
     def visualize_images(self, original_data_by_step, processed_data_by_step, applied_steps):
+        """
+        Visualizes medical images before and after processing.
+
+        Args:
+            original_data_by_step (list): A list of lists of medical images before processing.
+            processed_data_by_step (list): A list of lists of medical images after processing.
+            applied_steps (list): A list of strings representing the processing steps applied.
+
+        Raises:
+            ValueError: If `enabled` is not specified in the configuration.
+            ValueError: If `original_data_by_step` or `processed_data_by_step` is empty.
+        """
         if self.config["image_visualization"]["enabled"]:
             self.image_visualization.run(
                 original_data_by_step, processed_data_by_step, applied_steps
             )
 
     def copy_nifti_image(self, image):
+        """
+        Creates a deep copy of a NIFTI medical image.
+
+        Args:
+            image: The NIFTI medical image to copy.
+
+        Returns:
+            A deep copy of the NIFTI medical image.
+        """
         data_copy = image.get_fdata().copy()
         header_copy = image.header.copy()
         image_copy = nib.Nifti1Image(data_copy, image.affine, header_copy)

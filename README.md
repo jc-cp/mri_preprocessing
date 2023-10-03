@@ -214,9 +214,6 @@ Skull stripping is a critical pre-processing step in the analysis of neuroimagin
 - [ ] Check how to make parameter file for registration modular, how to properly get it 
 - [ ] Check output from the libraries in resmapling
 - [ ] Implement option for HDBET skull stripping and add to the installation
-- [x] Implement the DICOM to NIFTI conversion with checks 
-- [x] Rethink and implement the image loading class
-- [x] Rethink and implement the image saving class
 - [ ] Finalise the list of steps in the pipeline, taking into account the order 
 - [ ] Have one default config.json in proper format
 - [ ] Have a fmri template JSON
@@ -230,9 +227,9 @@ Skull stripping is a critical pre-processing step in the analysis of neuroimagin
 - [ ] Add A/B tests and some other GitActions (like formatting)
 - [ ] Look at the BIDS standard and see if reasonable
 - [ ] Testing of different steps 
-- [x] Add visualization script to test the functionalities 
 - [ ] Do an overall method to readme check for completeness
 - [ ] Finalize SPM registration implementation
 - [ ] Finalize FSL registration implementation
 - [ ] Finalize ANTS rescaling implementation
 - [ ] Check orientation of images as rescaling iterates in the z axis
+- [ ] Check the order of the pre-processing
