@@ -1,25 +1,63 @@
+"""
+A preprocessing pipeline for medical images.
+
+This script defines a `Pipeline` class that can be used to run a preprocessing 
+pipeline on a set of medical images.
+The pipeline consists of several preprocessing steps, such as registration, 
+resampling, skull stripping, and normalization.
+The pipeline can be configured using a JSON configuration file.
+
+Example usage:
+    # Load configuration from file
+    with open("config.json", "r") as f:
+        config = json.load(f)
+
+    # Create pipeline instance
+    pipeline = Pipeline(config)
+
+    # Run pipeline on images
+    pipeline.run()
+"""
 import json
 import logging
-import os
-import sys
 
-from preprocessing.bias_field_correction import BiasFieldCorrection
-from preprocessing.binning import Binning
+import nibabel as nib
+
+from src.preprocessing.bias_field_correction import BiasFieldCorrection
+from src.preprocessing.binning import Binning
 
 # Steps
-from preprocessing.denoising import Denoising
-from preprocessing.filtering import Filtering
-from preprocessing.normalization import Normalization
-from preprocessing.registration import Registration
-from preprocessing.resampling import Resampling
-from preprocessing.skull_stripping import SkullStripping
-from utils.image_conversion import ImageConversion
-from utils.image_loading import ImageLoading
-from utils.image_saving import ImageSaving
-from utils.image_visualization import ImageVisualization
+from src.preprocessing.denoising import Denoising
+from src.preprocessing.filtering import Filtering
+from src.preprocessing.normalization import Normalization
+from src.preprocessing.registration import Registration
+from src.preprocessing.resampling import Resampling
+from src.preprocessing.skull_stripping import SkullStripping
+from src.utils.image_conversion import ImageConversion
+from src.utils.image_loading import ImageLoading
+from src.utils.image_saving import ImageSaving
+from src.utils.image_visualization import ImageVisualization
 
 
 class Pipeline:
+    """
+    A class for running a preprocessing pipeline on a set of medical images.
+
+    Args:
+        config (dict): A dictionary containing configuration parameters for the pipeline.
+
+    Attributes:
+        config (dict): A dictionary containing configuration parameters for the pipeline.
+        preprocessing_steps (dict): A dictionary mapping step names to step classes.
+        image_loading (ImageLoading): An instance of a class for loading images.
+        image_conversion (ImageConversion): An instance of a class for converting images.
+        image_saving (ImageSaving): An instance of a class for saving images.
+        image_visualization (ImageVisualization): An instance of a class for visualizing images.
+
+    Methods:
+        run(): Runs the preprocessing pipeline on the specified images.
+    """
+
     def __init__(self, config_file):
         logging.basicConfig(
             filename="preprocessing.log",
@@ -31,10 +69,9 @@ class Pipeline:
         try:
             with open(config_file, "r", encoding="utf-8") as f:
                 self.config = json.load(f)
-            logging.info("Successfully loaded configuration file.")
-        except Exception as error:
-            logging.error(f"Error loading configuration file: {error}")
-            raise error
+            print("Successfully loaded configuration file.")
+        except (IOError, FileNotFoundError) as error:
+            print(f"Error loading configuration file: {error}")
 
         # TODO: check the order of the pre-processing
         # Map step names to classes, attention: the order here becomes relevant!
@@ -57,46 +94,69 @@ class Pipeline:
         self.image_visualization = ImageVisualization(self.config["image_visualization"])
 
     def run(self):
-        # Set up logging
-        logging.basicConfig(
-            filename="preprocessing.log",
-            level=logging.INFO,
-            format="%(asctime)s - %(levelname)s: %(message)s",
-            datefmt="%Y-%m-%d %H:%M:%S",
-        )
+        """
+        Runs the preprocessing pipeline on the specified images.
+        """
 
-        # Load image
+        try:
+            image_data, image_paths = self.load_images()
+            image_data = self.convert_images(image_data)
+            original_data_by_step, processed_data_by_step, applied_steps = self.apply_steps(
+                image_data, image_paths
+            )
+            self.save_images(image_data, image_paths)
+            self.visualize_images(original_data_by_step, processed_data_by_step, applied_steps)
+        except ExceptionGroup as error:
+            print(f"Error running pipeline: {error}")
+
+    def load_images(self):
         image_data, image_paths = self.image_loading.run()
-        print(f"Loaded {len(image_data)} images")  # Debugging print
+        print(f"Loaded {len(image_data)} images!")
+        return image_data, image_paths
 
-        # Convert image if necessary
+    def convert_images(self, image_data):
         if self.config["image_conversion"]["enabled"]:
             image_data = [self.image_conversion.run(image) for image in image_data]
-            print(f"Converted {len(image_data)} images")  # Debugging print
+            print(f"Converted {len(image_data)} images.")
+        return image_data
 
-        # Store initial state in dictionary
-        image_data_dict = {}
-        image_data_dict = {"initial": (image_data, image_data.copy())}
+    def apply_steps(self, image_data, image_paths):
+        original_data_by_step = []
+        processed_data_by_step = []
+        applied_steps = []
 
-        # Apply steps
-        original_image_data = image_data  # A copy for comparison through visualization
         for step_name, step_class in self.step_classes.items():
             if self.config[step_name]["enabled"]:
                 try:
                     step_instance = step_class(self.config[step_name])
-                    original_image_data = image_data.copy()
+                    print(f"Starting with pre-processing step: {step_instance}")
+                    # Make a deep copy of the original image data
+                    original_image_data = [self.copy_nifti_image(img) for img in image_data]
                     image_data = [
                         step_instance.run(image, path)
                         for image, path in zip(image_data, image_paths)
                     ]
-                    image_data_dict[step_name] = (original_image_data, image_data)
-                    logging.info(f"Successfully applied {step_name}.")
-                except Exception as error:
-                    logging.error(f"Error applying {step_name}: {str(error)}")
-                    raise error
+                    # Store the data for visualization
+                    original_data_by_step.append(original_image_data)
+                    processed_data_by_step.append(image_data)
+                    applied_steps.append(step_instance)
+                    print(f"Successfully applied {step_instance}.")
+                except (ValueError, IOError) as error:
+                    print(f"Error applying {step_name}, with error {error}.")
+        return original_data_by_step, processed_data_by_step, applied_steps
 
+    def save_images(self, image_data, image_paths):
         self.image_saving.run(image_data, image_paths)
 
-        # Visualization if enabled
+    def visualize_images(self, original_data_by_step, processed_data_by_step, applied_steps):
         if self.config["image_visualization"]["enabled"]:
-            self.image_visualization.run(image_data_dict)
+            self.image_visualization.run(
+                original_data_by_step, processed_data_by_step, applied_steps
+            )
+
+    def copy_nifti_image(self, image):
+        data_copy = image.get_fdata().copy()
+        header_copy = image.header.copy()
+        image_copy = nib.Nifti1Image(data_copy, image.affine, header_copy)
+
+        return image_copy

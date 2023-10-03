@@ -160,3 +160,5 @@ cython_debug/
 .idea/
 .vscode/*
 data/registration_templates/nihpd_asym_04.5-18.5_nifti/*
+data/images/*
+data/segmentations/*

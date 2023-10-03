@@ -5,19 +5,19 @@
     },    
     "image_loading":{
         "enabled": true,
-        "file_path": "/home/jc053/GIT/mri-preprocessing/data/input/example/MRHead.csv",
-        "input_dir": "/home/jc053/GIT/mri-preprocessing/data/input/example/",
+        "file_path": "/home/juanqui55/git/mri_preprocessing/data/input/example/MRHead.csv",
+        "input_dir": "/home/juanqui55/git/mri_preprocessing/data/input/example/",
         "recursive": true
     },
     "image_saving":{
         "enabled": true,
-        "input_dir": "/home/jc053/GIT/mri-preprocessing/data/input/example/",
-        "output_dir": "/home/jc053/GIT/mri-preprocessing/data/output/example"
+        "input_dir": "/home/juanqui55/git/mri_preprocessing/data/input/example/",
+        "output_dir": "/home/juanqui55/git/mri_preprocessing/data/output/example"
     },
     "image_visualization":{
         "enabled": true,
         "slice_index": 140,
-        "output_file": "/home/jc053/GIT/mri-preprocessing/data/output/example/output_file.png"
+        "output_file": "/home/juanqui55/git/mri_preprocessing/data/output/example/output_file.png"
     },
     "bias_field_correction": {
         "enabled": false,
@@ -127,28 +127,34 @@
         "expected_voxel_size": [1.0, 1.0, 1.0]
     },
     "registration":{
-        "enabled": false,
+        "enabled": true,
         "methods":{
             "spm":{
                 "enabled": false,
-                "template": "/home/jc053/GIT/mri-preprocessing/data/registration_templates/nihpd_asym_04.5-18.5_nifti/nihpd_asym_04.5-18.5_t2w.nii", 
-                "output_path": "/home/jc053/GIT/mri-preprocessing/data/output"
+                "template": "/home/juanqui55/git/mri_preprocessing/data/registration_templates/nihpd_asym_04.5-18.5_nifti/nihpd_asym_04.5-18.5_t2w.nii", 
+                "output_path": "/home/juanqui55/git/mri_preprocessing/data/output"
             },
             "itk":{
                 "enabled": false, 
-                "template": "/home/jc053/GIT/mri-preprocessing/data/registration_templates/nihpd_asym_04.5-18.5_nifti/nihpd_asym_04.5-18.5_t2w.nii", 
-                "output_path": "/home/jc053/GIT/mri-preprocessing/data/output"
+                "template": "/home/juanqui55/git/mri_preprocessing/data/registration_templates/nihpd_asym_04.5-18.5_nifti/nihpd_asym_04.5-18.5_t2w.nii", 
+                "output_path": "/home/juanqui55/git/mri_preprocessing/data/output"
             },
             "fsl":{
                 "enabled": false,
                 "resolution": 1.0,
-                "reference": "/home/jc053/GIT/mri-preprocessing/data/registration_templates/nihpd_asym_04.5-18.5_nifti/nihpd_asym_04.5-18.5_t2w.nii",
+                "reference": "/home/juanqui55/git/mri_preprocessing/data/registration_templates/nihpd_asym_04.5-18.5_nifti/nihpd_asym_04.5-18.5_t2w.nii",
                 "interp": "trilinear"
+            },
+            "sitk":{
+                "enabled": true,
+                "reference": "/home/juanqui55/git/mri_preprocessing/data/registration_templates/temp_head.nii.gz",
+                "output_path": "/home/juanqui55/git/mri_preprocessing/data/output"
+
             }
         }
     },
     "resampling":{
-        "enabled": true,
+        "enabled": false,
         "methods":{
             "ants":{
                 "enabled": false,

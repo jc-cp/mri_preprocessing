@@ -1,8 +1,9 @@
 """
 This script demonstrates how to resample a 3D medical image using different methods.
 
-The Resampling class provides two methods for resampling images: ANTs and SciPy. The class takes a configuration
-dictionary as input, which specifies the resampling methods to enable and the target voxel spacing for each method.
+The Resampling class provides two methods for resampling images: ANTs and SciPy. The class takes 
+a configuration dictionary as input, which specifies the resampling methods to enable and the 
+target voxel spacing for each method.
 """
 import os
 
@@ -22,17 +23,11 @@ class Resampling:
     config : dict
         A dictionary containing configuration options for the resampling methods.
 
-    Attributes
-    ----------
-    config : dict
-        A dictionary containing configuration options for the resampling methods.
-    methods : dict
-        A dictionary containing the available resampling methods.
-
     Methods
     -------
     run(image, path)
-        Resamples the given image using the enabled resampling methods and saves the results to the specified path.
+        Resamples the given image using the enabled resampling methods and
+        saves the results to the specified path.
     resample_with_ants(image, spacing)
         Resamples the given image using ANTs.
     resample_with_scipy(image, spacing)
@@ -53,7 +48,8 @@ class Resampling:
 
     def run(self, image, path: str):
         """
-        Resamples the given image using the enabled resampling methods and saves the results to the specified path.
+        Resamples the given image using the enabled resampling methods and
+        saves the results to the specified path.
 
         Parameters
         ----------

@@ -1,8 +1,9 @@
+"""Setup script for the package."""
 from setuptools import find_packages, setup
 
 setup(
     name="mri_preprocessing",
-    version="0.1",
+    version="0.2",
     author="Juan Carlos Climent Pardo",
     description="A short description of your package",
     packages=find_packages(),
