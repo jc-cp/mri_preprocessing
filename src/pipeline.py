@@ -137,12 +137,12 @@ class Pipeline:
         print(f"Loaded {len(image_data)} images!")
         return image_data, image_paths
 
-    def convert_images(self, image_data):
+    def convert_image(self, image):
         """
         Converts medical images between DICOM and NIFTI formats.
 
         Args:
-            image_data (list): A list of medical images in either DICOM or NIFTI format.
+            image_data: Medical image in either DICOM or NIFTI format.
 
         Returns:
             A list of converted medical images in the opposite format.
@@ -151,9 +151,9 @@ class Pipeline:
             ValueError: If `enabled` is not specified in the configuration.
         """
         if self.config["image_conversion"]["enabled"]:
-            image_data = [self.image_conversion.run(image) for image in image_data]
-            print(f"Converted {len(image_data)} images.")
-        return image_data
+            image_converted = self.image_conversion.run(image)
+            print(f"Converted {len(image_converted)} images.")
+        return image_converted
 
     def apply_steps(self, image_data, image_paths):
         """
