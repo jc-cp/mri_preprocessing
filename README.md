@@ -200,21 +200,7 @@ Skull stripping is a critical pre-processing step in the analysis of neuroimagin
 
 
 ### To do's
-- [ ] Add other quality control checks as needed
-- [ ] Check MRIQC for quality control
-- [ ] Implement LAPGM Bias Field Correction
-- [ ] Check Binning expected format for the class 
-- [ ] Implement final conversion from 3d to 2d
-- [ ] Create methods dict in classes to get parameters easier 
-- [ ] Create Feature extraction class and add readme description
-- [ ] Rethink pre-processing segmentation options
-- [ ] Recheck slice order and the time acquisition used in the slice timing correction -- should match your actual MRI data acquisition parameters
-- [ ] Implement intensity normalization option from https://github.com/jcreinhold/intensity-normalization
-- [ ] Check output from spm registration
-- [ ] Check how to make parameter file for registration modular, how to properly get it 
-- [ ] Check output from the libraries in resmapling
-- [ ] Implement option for HDBET skull stripping and add to the installation
-- [ ] Finalise the list of steps in the pipeline, taking into account the order 
+<mark>Overall</mark>
 - [ ] Have one default config.json in proper format
 - [ ] Have a fmri template JSON
 - [ ] Have a smri template JSON
@@ -226,10 +212,20 @@ Skull stripping is a critical pre-processing step in the analysis of neuroimagin
 - [ ] Fix the Pylint CI errors
 - [ ] Add A/B tests and some other GitActions (like formatting)
 - [ ] Look at the BIDS standard and see if reasonable
-- [ ] Testing of different steps 
-- [ ] Do an overall method to readme check for completeness
-- [ ] Finalize SPM registration implementation
-- [ ] Finalize FSL registration implementation
-- [ ] Finalize ANTS rescaling implementation
+
+<mark>PP steps</mark>
+- [ ] Implement LAPGM Bias Field Correction
 - [ ] Check orientation of images as rescaling iterates in the z axis
-- [ ] Check the order of the pre-processing
+- [ ] Check resmapling with ants and scipy
+- [ ] Check spm and fsl registration
+- [ ] Implement option for HDBET skull stripping and add to the installation
+- [ ] Implement intensity normalization option from https://github.com/jcreinhold/intensity-normalization
+- [ ] Check Binning expected format for the class 
+- [ ] Implement final conversion from 3d to 2d
+- [ ] Recheck slice order and the time acquisition used in the slice timing correction -- should match your actual MRI data acquisition parameters
+
+<mark>Additional steps</mark>
+- [ ] Rethink pre-processing segmentation options
+- [ ] Rethink Feature extraction class and add readme description
+- [ ] Rethink quality control class
+- [ ] Check MRIQC for quality control

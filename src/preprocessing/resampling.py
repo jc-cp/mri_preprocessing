@@ -130,7 +130,7 @@ class Resampling:
         resampled_image = zoom(image, scale_factors, order=1)
         return resampled_image
 
-    def resample_with_sitk(self, image, _):
+    def resample_with_sitk(self, image, _) -> nib.Nifti1Image:
         """
         Resamples and aligns the given moving image to have the same orientation,
         spacing, and origin as the fixed image.
@@ -161,18 +161,33 @@ class Resampling:
             elif interp_type == "nearest_neighbor":
                 interp_type = sitk.sitkNearestNeighbor
 
+            old_size = fixed_img.GetSize()
+            old_spacing = fixed_img.GetSpacing()
+            new_spacing = (
+                1,
+                1,
+                1,
+            )
+            new_size = [
+                int(round((old_size[0] * old_spacing[0]) / float(new_spacing[0]))),
+                int(round((old_size[1] * old_spacing[1]) / float(new_spacing[1]))),
+                int(round((old_size[2] * old_spacing[2]) / float(new_spacing[2]))),
+            ]
+
             resampler = sitk.ResampleImageFilter()
             resampler.SetOutputDirection(fixed_img.GetDirection())
-            resampler.SetOutputSpacing(fixed_img.GetSpacing())
-            resampler.SetSize(fixed_img.GetSize())
+            resampler.SetOutputSpacing(new_spacing)
+            resampler.SetSize(new_size)
             resampler.SetOutputOrigin(fixed_img.GetOrigin())
             resampler.SetDefaultPixelValue(fixed_img.GetPixelIDValue())
-            resampler.SetOutputPixelType(sitk.sitkFloat32)
+            # resampler.SetOutputPixelType(sitk.sitkFloat32)
             resampler.SetInterpolator(interp_type)
+            print(fixed_img.GetDirection())
+            print(moving_img.GetDirection())
+            resampled_img = resampler.Execute(moving_img)
 
-            aligned_moving_img = resampler.Execute(moving_img)
-            aligned_moving_img = sitk_to_nib(aligned_moving_img)
+            resampled_img = sitk_to_nib(resampled_img)
         except ExceptionGroup:
             print("Exception thrown while setting up the resampling filter.")
 
-        return aligned_moving_img
+        return resampled_img

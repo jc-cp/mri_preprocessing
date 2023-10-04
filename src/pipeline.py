@@ -21,6 +21,8 @@ Example usage:
 import json
 import logging
 
+import nibabel as nib
+
 from src.preprocessing.bias_field_correction import BiasFieldCorrection
 from src.preprocessing.binning import Binning
 from src.preprocessing.denoising import Denoising
@@ -98,13 +100,26 @@ class Pipeline:
         """
 
         try:
-            image_data, image_paths = self.load_images()
-            image_data = self.convert_images(image_data)
-            original_data_by_step, processed_data_by_step, applied_steps = self.apply_steps(
-                image_data, image_paths
-            )
-            self.save_images(image_data, image_paths)
-            self.visualize_images(original_data_by_step, processed_data_by_step, applied_steps)
+            """Runs the preprocessing pipeline on the specified images."""
+            for image, path in self.load_images():
+                image = self.convert_image(image)
+
+                initial_image = image
+
+                (
+                    original_data_by_step,
+                    processed_data_by_step,
+                    applied_steps,
+                    template_image,
+                ) = self.apply_steps([image], [path])
+                self.save_images([image], [path])
+                self.visualize_images(
+                    initial_image,
+                    template_image,
+                    original_data_by_step,
+                    processed_data_by_step,
+                    applied_steps,
+                )
         except ExceptionGroup as error:
             print(f"Error running pipeline: {error}")
 
@@ -194,7 +209,14 @@ class Pipeline:
         """
         self.image_saving.run(image_data, image_paths)
 
-    def visualize_images(self, original_data_by_step, processed_data_by_step, applied_steps):
+    def visualize_images(
+        self,
+        initial_image,
+        template_image,
+        original_data_by_step,
+        processed_data_by_step,
+        applied_steps,
+    ):
         """
         Visualizes medical images before and after processing.
 
@@ -209,5 +231,9 @@ class Pipeline:
         """
         if self.config["image_visualization"]["enabled"]:
             self.image_visualization.run(
-                original_data_by_step, processed_data_by_step, applied_steps
+                initial_image,
+                template_image,
+                original_data_by_step,
+                processed_data_by_step,
+                applied_steps,
             )

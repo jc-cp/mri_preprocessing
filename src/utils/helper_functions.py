@@ -7,9 +7,20 @@ import SimpleITK as sitk
 
 
 def sitk_to_nib(sitk_image):
-    """Conversion from SimpleITK to Nibabel."""
+    """Conversion from SimpleITK to Nibabel preserving spatial information."""
     np_image = sitk.GetArrayFromImage(sitk_image)
-    nib_image = nib.Nifti1Image(np_image, np.eye(4))
+
+    origin = np.array(sitk_image.GetOrigin())
+    spacing = np.array(sitk_image.GetSpacing())
+    direction = np.array(sitk_image.GetDirection()).reshape((3, 3))
+
+    affine = np.eye(4)
+    affine[:3, :3] = direction * spacing
+    affine[:3, 3] = origin
+
+    # Create the Nibabel image with the data and affine matrix
+    nib_image = nib.Nifti1Image(np_image, affine)
+
     return nib_image
 
 

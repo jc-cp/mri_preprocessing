@@ -20,10 +20,8 @@ class ImageSaving:
 
         # Create the same directory structure in the output directory
         output_path = os.path.join(self.output_dir, relative_path)
-
-        # Change the extension to .nii.gz if it's not already
-        if not output_path.endswith(".nii.gz"):
-            output_path = os.path.splitext(output_path)[0] + ".nii.gz"
+        base_name = os.path.splitext(os.path.splitext(output_path)[0])[0]
+        output_path = base_name + "_pp.nii.gz"
 
         # Make sure the output directory exists
         os.makedirs(os.path.dirname(output_path), exist_ok=True)

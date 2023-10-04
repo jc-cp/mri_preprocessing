@@ -19,6 +19,7 @@ from nipype.interfaces.fsl import FLIRT
 
 from src.utils.helper_functions import (
     convert_nii_gz_to_nii,
+    nib_to_sitk,
     prepare_output_directory,
     sitk_to_nib,
 )
@@ -214,11 +215,7 @@ class Registration:
 
         return result.outputs
 
-    def sitk_registration(
-        self,
-        _,
-        img_path: str,
-    ):
+    def sitk_registration(self, resampled_fixed_img, img_path: str):
         template = self.config["methods"]["itk"]["template"]
 
         print("Intializing Sitk registration...")
@@ -226,8 +223,8 @@ class Registration:
         if not os.path.exists(template):
             raise FileNotFoundError(f"No file found at {template}")
 
-        fixed_img = sitk.ReadImage(template, sitk.sitkFloat32)
-
+        # fixed_img = sitk.ReadImage(template, sitk.sitkFloat32)
+        resampled_fixed_img = nib_to_sitk(resampled_fixed_img)
         if "nii" in img_path:
             try:
                 moving_img = sitk.ReadImage(img_path, sitk.sitkFloat32)
@@ -235,7 +232,7 @@ class Registration:
                 # print("Moving image direction: ", moving_img.GetDirection())
 
                 transform = sitk.CenteredTransformInitializer(
-                    fixed_img,
+                    resampled_fixed_img,
                     moving_img,
                     sitk.Euler3DTransform(),
                     sitk.CenteredTransformInitializerFilter.GEOMETRY,
@@ -258,12 +255,12 @@ class Registration:
                 registration_method.SmoothingSigmasAreSpecifiedInPhysicalUnitsOn()
                 registration_method.SetInitialTransform(transform)
                 print("Sitk registration ongoing...")
-                final_transform = registration_method.Execute(fixed_img, moving_img)
+                final_transform = registration_method.Execute(resampled_fixed_img, moving_img)
 
                 # print("Final transform parameters: ", final_transform.GetParameters())
                 registered_image = sitk.Resample(
                     moving_img,
-                    fixed_img,
+                    resampled_fixed_img,
                     final_transform,
                     sitk.sitkLinear,
                     0.0,

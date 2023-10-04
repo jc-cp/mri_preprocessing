@@ -5,31 +5,33 @@
     },    
     "image_loading":{
         "enabled": true,
-        "file_path": "/home/juanqui55/git/mri_preprocessing/data/input/example/MRHead.csv",
-        "input_dir": "/home/juanqui55/git/mri_preprocessing/data/input/example/",
+        "file_path": "/home/juanqui55/git/mri_preprocessing/data/input/images/233126.csv",
+        "input_dir": "/home/juanqui55/git/mri_preprocessing/data/input/images/",
         "recursive": true
     },
     "image_saving":{
         "enabled": true,
-        "input_dir": "/home/juanqui55/git/mri_preprocessing/data/input/example/",
-        "output_dir": "/home/juanqui55/git/mri_preprocessing/data/output/example"
+        "input_dir": "/home/juanqui55/git/mri_preprocessing/data/input/images/",
+        "output_dir": "/home/juanqui55/git/mri_preprocessing/data/output/"
     },
     "image_visualization":{
         "enabled": true,
-        "slice_index": 140,
-        "output_file": "/home/juanqui55/git/mri_preprocessing/data/output/example/output_file.png"
+        "output_file": "/home/juanqui55/git/mri_preprocessing/data/output/output_file.png"
     },
     "bias_field_correction": {
         "enabled": false,
+        "saving_files": true,
+        "output_dir": "/home/juanqui55/git/mri_preprocessing/data/output",
         "methods": {
-            "itk":{
-                "enabled": false,
-                "number_of_iterations": [50, 50, 30, 20],
-                "shrink_factor": 2,
+            "sitk":{
+                "enabled": true,
+                "simple": true,
+                "max_number_of_iterations": [50, 50, 30, 20],
+                "bf_fw_hmax": 0.15,
                 "convergence_threshold": 0.001
             },
             "lapgm":{
-                "enabled": true
+                "enabled": false
             }
         }
     },

@@ -28,9 +28,7 @@ class ImageLoading:
 
     def run(self):
         """Main function to load the files."""
-        image_paths = self._get_image_paths()
-        images = []
-        for image_path in image_paths:
+        for image_path in self._get_image_paths():
             try:
                 if image_path.lower().endswith(".dcm"):
                     print("Loading images of type: DICOM.")
@@ -43,42 +41,36 @@ class ImageLoading:
                     image = nib.as_closest_canonical(image)  # Reorient to closest canonical (RAS)
                 else:
                     raise ValueError(f"Unsupported file extension in file {image_path}")
-                images.append(image)
+                yield image, image_path
             except (IOError, RuntimeError, FileNotFoundError) as error:
                 print(f"Error loading image from {image_path}: {str(error)}")
-        return images, image_paths
 
     def _get_image_paths(self):
         if self.file_path and self.file_path.lower().endswith(".csv"):
             d_f = pd.read_csv(self.file_path)
-            return d_f["image_path"].tolist()
+            for image_path in d_f["image_path"].tolist():
+                yield image_path
         elif self.paths:
-            image_paths = []
             for path in self.paths:
                 if os.path.isdir(path):
-                    image_paths.extend(self._get_images_from_directory(path))
+                    for image_path in self._get_images_from_directory(path):
+                        yield image_path
                 elif os.path.isfile(path):
-                    image_paths.append(path)
+                    yield path
                 else:
                     raise FileNotFoundError(f"No file or directory found at {path}")
-            if not image_paths:
-                raise ValueError("No images found in the provided paths.")
-            return image_paths
         else:
             raise ValueError("No valid image path or file with image paths provided.")
 
     def _get_images_from_directory(self, directory):
         if self.recursive:
-            image_files = []
             for root, _, files in os.walk(directory):
                 for file in files:
                     if file.lower().endswith((".dcm", ".nii", ".gz")):
-                        image_files.append(os.path.join(root, file))
-            return image_files
+                        yield os.path.join(root, file)
         else:
-            return [
-                os.path.join(directory, f)
-                for f in os.listdir(directory)
-                if os.path.isfile(os.path.join(directory, f))
-                and f.lower().endswith((".dcm", ".nii", ".gz"))
-            ]
+            for f in os.listdir(directory):
+                if os.path.isfile(os.path.join(directory, f)) and f.lower().endswith(
+                    (".dcm", ".nii", ".gz")
+                ):
+                    yield os.path.join(directory, f)

@@ -7,8 +7,16 @@ The class can be configured using a dictionary of configuration parameters.
 """
 import os
 
+import nibabel as nib
+
 # import lapgm
 import SimpleITK as sitk
+
+from src.utils.helper_functions import (
+    nib_to_sitk,
+    prepare_output_directory,
+    sitk_to_nib,
+)
 
 
 class BiasFieldCorrection:
@@ -19,9 +27,9 @@ class BiasFieldCorrection:
         config (dict): A dictionary containing configuration parameters.
 
     Methods:
-        run(image: str) -> sitk.Image: Runs the bfc on the specified image.
-        itk_bias_field_correction(image: str) -> sitk.Image: Runs the ITK bfc.
-        lapgm_bias_field_correction(image: str) -> sitk.Image: Runs the LAPGM bfc.
+        run(image) -> nib.Nifti1Image: Runs the bfc on the specified image.
+        sitk_bias_field_correction(image) -> sitk.Image: Runs the ITK bfc.
+        lapgm_bias_field_correction(image) -> sitk.Image: Runs the LAPGM bfc.
     """
 
     def __init__(self, config: dict):
@@ -32,73 +40,82 @@ class BiasFieldCorrection:
             config (dict): A dictionary containing configuration parameters for the bfc.
         """
         self.config = config
+        self.methods = {
+            "lapgm": self.lapgm_bias_field_correction,
+            "sitk": self.sitk_bias_field_correction,
+        }
 
-    def run(self, image: str) -> sitk.Image:
+    def run(self, image, image_path: str) -> nib.Nifti1Image:
         """
         Runs the bias field correction on the specified image.
 
         Args:
-            image (str): The path to the image file.
+            image:  The path to the image file.
 
         Returns:
             sitk.Image: The corrected image.
         """
-        if self.config["methods"]["itk"]["enabled"]:
-            return self.itk_bias_field_correction(image)
-        elif self.config["methods"]["lapgm"]["enabled"]:
-            return self.lapgm_bias_field_correction(image)
-        else:
-            raise ValueError("No valid bias field correction method enabled in configuration.")
+        saving_images = self.config["saving_files"]
+        output_dir = self.config["output_dir"]
 
-    def itk_bias_field_correction(self, image: str) -> sitk.Image:
+        for method_name in self.config["methods"]:
+            if self.config["methods"][method_name]["enabled"]:
+                func = self.methods.get(method_name, None)
+                if func:
+                    bf_corrected_image = func(image)
+                if saving_images:
+                    new_dir, img_id = prepare_output_directory(output_dir, image_path)
+                    filename = os.path.join(new_dir, f"{img_id}_{method_name}_bf_corrected.nii.gz")
+                    nib.save(bf_corrected_image, filename)
+                return bf_corrected_image
+            else:
+                raise ValueError("No valid bias field correction method enabled in configuration.")
+
+    def sitk_bias_field_correction(self, image) -> nib.Nifti1Image:
         """
         Runs the bias field correction using the ITK method.
 
         Args:
-            image (str): The path to the image file.
+            image: The image file.
 
         Returns:
-            sitk.Image: The corrected image.
+            nib.Nifti1Image: The corrected image.
         """
-        # Ensure the image file exists
-        if not os.path.exists(image):
-            raise FileNotFoundError(f"No file found at {image}")
 
-        shrinking_factor = self.config["methods"]["itk"]["parameters"]["shrink_factor"]
+        simple = self.config["methods"]["sitk"]["simple"]
+        sitk_image = nib_to_sitk(image)
 
-        # Load the image
-        img = sitk.ReadImage(image)
+        if simple:
+            print("Applying simple bias field correction.")
+            corrected_img = sitk.N4BiasFieldCorrection(sitk_image)
+        else:
+            print("Applying complex bias field correction.")
+            bf_full_width_at_half_maximum = self.config["methods"]["sitk"]["bf_fw_hmax"]
+            max_number_of_iterations = self.config["methods"]["sitk"]["max_number_of_iterations"]
+            convergence_threshold = self.config["methods"]["sitk"]["convergence_threshold"]
 
-        # Create the corrector object
-        corrector = sitk.N4BiasFieldCorrectionImageFilter()
+            corrector = sitk.N4BiasFieldCorrectionImageFilter()
 
-        # Set parameters
-        corrector.SetMaximumNumberOfIterations(
-            self.config["methods"]["itk"]["parameters"]["number_of_iterations"]
-        )
-        # corrector.SetShrinkFactor(shrinking_factor)
+            # Parameters
+            corrector.SetMaximumNumberOfIterations(max_number_of_iterations)
+            corrector.SetConvergenceThreshold(convergence_threshold)
+            corrector.SetBiasFieldFullWidthAtHalfMaximum(bf_full_width_at_half_maximum)
+            corrected_img = corrector.Execute(sitk_image)
 
-        # Run the correction
-        # corrected_img = corrector.Execute(img)
+        return sitk_to_nib(corrected_img)
 
-        # return corrected_img
-
-    def lapgm_bias_field_correction(self, image: str) -> sitk.Image:
+    def lapgm_bias_field_correction(self, image) -> nib.Nifti1Image:
         """
         Runs the bias field correction using the LAPGM method.
 
         Args:
-            image (str): The path to the image file.
+            image: The image file.
 
         Returns:
-            sitk.Image: The corrected image.
+            nib.Nifti1Image: The corrected image.
         """
-        # Ensure the image file exists
-        if not os.path.exists(image):
-            raise FileNotFoundError(f"No file found at {image}")
-
         # Load the image
-        img = sitk.ReadImage(image)
+        # img = sitk.ReadImage(image)
 
         # Run the correction
         # corrected_img = lapgm.bias_field_correction(img)
