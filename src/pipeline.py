@@ -21,18 +21,15 @@ Example usage:
 import json
 import logging
 
-import nibabel as nib
-
 from src.preprocessing.bias_field_correction import BiasFieldCorrection
 from src.preprocessing.binning import Binning
-
-# Steps
 from src.preprocessing.denoising import Denoising
 from src.preprocessing.filtering import Filtering
 from src.preprocessing.normalization import Normalization
 from src.preprocessing.registration import Registration
 from src.preprocessing.resampling import Resampling
 from src.preprocessing.skull_stripping import SkullStripping
+from src.utils.helper_functions import copy_nifti_image
 from src.utils.image_conversion import ImageConversion
 from src.utils.image_loading import ImageLoading
 from src.utils.image_saving import ImageSaving
@@ -75,10 +72,10 @@ class Pipeline:
 
         # Map step names to classes, attention: the order here becomes relevant!
         self.step_classes = {
-            "registration": Registration,
-            "resampling": Resampling,
-            "skull_stripping": SkullStripping,
             "bias_field_correction": BiasFieldCorrection,
+            "resampling": Resampling,
+            "registration": Registration,
+            "skull_stripping": SkullStripping,
             "normalization": Normalization,
             "filtering": Filtering,
             "denoising": Denoising,
@@ -170,7 +167,7 @@ class Pipeline:
                     step_instance = step_class(self.config[step_name])
                     print(f"Starting with pre-processing step: {step_name}")
                     # Make a deep copy of the original image data
-                    original_image_data = [self.copy_nifti_image(img) for img in image_data]
+                    original_image_data = [copy_nifti_image(img) for img in image_data]
                     image_data = [
                         step_instance.run(image, path)
                         for image, path in zip(image_data, image_paths)
@@ -214,19 +211,3 @@ class Pipeline:
             self.image_visualization.run(
                 original_data_by_step, processed_data_by_step, applied_steps
             )
-
-    def copy_nifti_image(self, image):
-        """
-        Creates a deep copy of a NIFTI medical image.
-
-        Args:
-            image: The NIFTI medical image to copy.
-
-        Returns:
-            A deep copy of the NIFTI medical image.
-        """
-        data_copy = image.get_fdata().copy()
-        header_copy = image.header.copy()
-        image_copy = nib.Nifti1Image(data_copy, image.affine, header_copy)
-
-        return image_copy

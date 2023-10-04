@@ -1,8 +1,8 @@
 """Visualization methods for comparing plots."""
 import matplotlib.pyplot as plt
 import nibabel as nib
-import numpy as np
-import SimpleITK as sitk
+
+from src.utils.helper_functions import sitk_to_nib
 
 
 class ImageVisualization:
@@ -13,7 +13,7 @@ class ImageVisualization:
         config (int): A dictionary of configuration parameters.
             The following parameters are supported:
             - slice_index (int): The index of the slice to visualize (default: 0).
-            - output_file (str): The path to the output file to save the visualization (default: None).
+            - output_file (str): The path to the output  visualization (default: None).
     """
 
     def __init__(self, config: int):
@@ -37,7 +37,7 @@ class ImageVisualization:
 
         n_steps = len(applied_steps)
         n_images = len(original_data_by_step[0])
-        fig, axes = plt.subplots(n_steps, 2 * n_images, figsize=(20, 5 * n_steps), squeeze=False)
+        _, axes = plt.subplots(n_steps, 2 * n_images, figsize=(20, 5 * n_steps), squeeze=False)
 
         for i, step_name in enumerate(applied_steps):
             images_before = original_data_by_step[i]
@@ -61,16 +61,10 @@ class ImageVisualization:
             return image.get_fdata()[:, :, self.slice_index]
         else:
             try:
-                nib_image = self.sitk_to_nib(image)
+                nib_image = sitk_to_nib(image)
                 return nib_image.get_fdata()[:, :, self.slice_index]
             except TypeError:
                 print(
                     "Unsupported image type. Currently only nibabel.nifti1.Nifti1Image"
                     "and Sikt conversion is supported."
                 )
-
-    def sitk_to_nib(self, sitk_image):
-        """Conversion from SimpleITK to Nibabel."""
-        np_image = sitk.GetArrayFromImage(sitk_image)
-        nib_image = nib.Nifti1Image(np_image, np.eye(4))
-        return nib_image

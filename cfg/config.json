@@ -128,16 +128,16 @@
     },
     "registration":{
         "enabled": true,
+        "saving_files": true,
+        "output_dir": "/home/juanqui55/git/mri_preprocessing/data/output",
         "methods":{
             "spm":{
                 "enabled": false,
-                "template": "/home/juanqui55/git/mri_preprocessing/data/registration_templates/temp_head.nii.gz", 
-                "output_path": "/home/juanqui55/git/mri_preprocessing/data/output"
+                "template": "/home/juanqui55/git/mri_preprocessing/data/registration_templates/temp_head.nii.gz" 
             },
             "itk":{
                 "enabled": false, 
-                "template": "/home/juanqui55/git/mri_preprocessing/data/registration_templates/temp_head.nii.gz", 
-                "output_path": "/home/juanqui55/git/mri_preprocessing/data/output"
+                "template": "/home/juanqui55/git/mri_preprocessing/data/registration_templates/temp_head.nii.gz" 
             },
             "fsl":{
                 "enabled": false,
@@ -147,14 +147,14 @@
             },
             "sitk":{
                 "enabled": true,
-                "reference": "/home/juanqui55/git/mri_preprocessing/data/registration_templates/temp_head.nii.gz",
-                "output_path": "/home/juanqui55/git/mri_preprocessing/data/output/registration_outputs"
-
+                "reference": "/home/juanqui55/git/mri_preprocessing/data/registration_templates/temp_head.nii.gz"
             }
         }
     },
     "resampling":{
-        "enabled": false,
+        "enabled": true,
+        "saving_files": true,
+        "output_dir": "/home/juanqui55/git/mri_preprocessing/data/output",
         "methods":{
             "ants":{
                 "enabled": false,
@@ -162,9 +162,15 @@
                 "smoothing": true
             },
             "scipy":{
-                "enabled": true,
+                "enabled": false,
                 "scale_factor": 3.0,
                 "order": 0
+            },
+            "sitk":{
+                "enabled": true,
+                "spacing": [1.0, 1.0, 1.0],
+                "reference": "/home/juanqui55/git/mri_preprocessing/data/registration_templates/temp_head.nii.gz",
+                "interpolation": "linear"
             }
         }
     },

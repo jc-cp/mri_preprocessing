@@ -14,9 +14,14 @@ import itk
 import nibabel as nib
 import numpy as np
 import SimpleITK as sitk
-from itk import itkMINCImageIOPython
 from nipype.interfaces import spm
 from nipype.interfaces.fsl import FLIRT
+
+from src.utils.helper_functions import (
+    convert_nii_gz_to_nii,
+    prepare_output_directory,
+    sitk_to_nib,
+)
 
 
 class Registration:
@@ -41,22 +46,29 @@ class Registration:
             "fsl": self.fsl_registration,
         }
 
-    def run(self, image, path: str):
+    def run(self, image, image_path: str):
         """
         Registers an image to a template image using the configured methods.
 
         Args:
             image: The image to register.
-            template_path (str): The path to the template image.
+            image_path (str): The path to the image.
 
         Returns:
             The registered image.
         """
+        saving_images = self.config["saving_files"]
+        output_dir = self.config["output_dir"]
+
         for method_name in self.config["methods"]:
             if self.config["methods"][method_name]["enabled"]:
                 func = self.methods.get(method_name, None)
                 if func:
-                    image = func(image, path)
+                    image = func(image, image_path)
+                if saving_images:
+                    new_dir, img_id = prepare_output_directory(output_dir, image_path)
+                    filename = os.path.join(new_dir, f"{img_id}_{method_name}_registered.nii.gz")
+                    nib.save(image, filename)
         return image
 
     def itk_registration(self, image, path):
@@ -112,7 +124,7 @@ class Registration:
                 nifti_image = nib.Nifti1Image(np_array, np.eye(4))
                 return nifti_image
 
-            except:
+            except ExceptionGroup:
                 print("Cannot transform", path.split("/")[-1])
 
         else:
@@ -135,7 +147,7 @@ class Registration:
 
         template = self.config["methods"]["spm"]["template"]
 
-        nii_path = self.convert_nii_gz_to_nii(path)
+        nii_path = convert_nii_gz_to_nii(path)
         deformation_file_path = self.spm_segmentation(image, path)
 
         # Define the SPM Normalize12 instance for registration
@@ -150,22 +162,10 @@ class Registration:
             result = norm12.run()
             print("type registration result:", type(result))
 
-        except Exception as error:
+        except ExceptionGroup as error:
             print(f"SPM Normalize12 failed with error: {error}")
 
         return result.outputs
-
-    def convert_nii_gz_to_nii(self, nii_gz_path):
-        # Load the .nii.gz file
-        img = nib.load(nii_gz_path)
-
-        # Derive the .nii file path from the .nii.gz file path
-        nii_path = nii_gz_path[:-3]  # Remove the '.gz' from the end
-
-        # Save the image data to a .nii file
-        nib.save(img, nii_path)
-
-        return nii_path
 
     def spm_segmentation(self, image, path):
         # Define the segmentation instance
@@ -214,10 +214,14 @@ class Registration:
 
         return result.outputs
 
-    def sitk_registration(self, _, img_path: str):
+    def sitk_registration(
+        self,
+        _,
+        img_path: str,
+    ):
         template = self.config["methods"]["itk"]["template"]
 
-        print("Intializing Sikt registration...")
+        print("Intializing Sitk registration...")
         # Ensure the image file exists
         if not os.path.exists(template):
             raise FileNotFoundError(f"No file found at {template}")
@@ -225,12 +229,10 @@ class Registration:
         fixed_img = sitk.ReadImage(template, sitk.sitkFloat32)
 
         if "nii" in img_path:
-            # Call registration function
-            image_id = img_path.split("/")[-1]
-            new_dir = self.prepare_output_directory(image_id)
-
             try:
                 moving_img = sitk.ReadImage(img_path, sitk.sitkFloat32)
+                # print("Fixed image direction: ", fixed_img.GetDirection())
+                # print("Moving image direction: ", moving_img.GetDirection())
 
                 transform = sitk.CenteredTransformInitializer(
                     fixed_img,
@@ -255,10 +257,10 @@ class Registration:
                 registration_method.SetSmoothingSigmasPerLevel(smoothingSigmas=[2, 1, 0])
                 registration_method.SmoothingSigmasAreSpecifiedInPhysicalUnitsOn()
                 registration_method.SetInitialTransform(transform)
-                print("Sikt registration ongoing...")
+                print("Sitk registration ongoing...")
                 final_transform = registration_method.Execute(fixed_img, moving_img)
 
-                ### EDIT HERE ###
+                # print("Final transform parameters: ", final_transform.GetParameters())
                 registered_image = sitk.Resample(
                     moving_img,
                     fixed_img,
@@ -267,21 +269,12 @@ class Registration:
                     0.0,
                     moving_img.GetPixelID(),
                 )
-                file_name = new_dir + "/" + image_id.split(".")[0] + "_registered" + ".nii.gz"
-                sitk.WriteImage(
-                    registered_image,
-                    fileName=file_name,
-                )
-                print("Sikt registration finished...")
+
+                registered_image = sitk_to_nib(registered_image)
+                print("Sitk registration finished...")
                 return registered_image
             except (FileNotFoundError, IOError, RuntimeError) as error:
-                print(f"Cannot transform {image_id}, with error {error}.")
+                print(f"Cannot transform {img_path}, with error {error}.")
 
         else:
             raise FileNotFoundError("File has not .nii suffix on it!")
-
-    def prepare_output_directory(self, image_id):
-        output_path = self.config["methods"]["itk"]["output_path"]
-        new_dir = os.path.join(output_path, image_id.split(".")[0])
-        os.makedirs(new_dir, exist_ok=True)
-        return new_dir

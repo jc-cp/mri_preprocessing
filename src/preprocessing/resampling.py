@@ -9,9 +9,15 @@ import os
 
 import nibabel as nib
 import numpy as np
+import SimpleITK as sitk
 from nipype.interfaces.ants import ResampleImageBySpacing
-from nipype.interfaces.fsl import FLIRT
 from scipy.ndimage import zoom
+
+from src.utils.helper_functions import (
+    nib_to_sitk,
+    prepare_output_directory,
+    sitk_to_nib,
+)
 
 
 class Resampling:
@@ -44,9 +50,13 @@ class Resampling:
             A dictionary containing configuration options for the resampling methods.
         """
         self.config = config
-        self.methods = {"ants": self.resample_with_ants, "scipy": self.resample_with_scipy}
+        self.methods = {
+            "ants": self.resample_with_ants,
+            "scipy": self.resample_with_scipy,
+            "sitk": self.resample_with_sitk,
+        }
 
-    def run(self, image, path: str):
+    def run(self, image, image_path: str):
         """
         Resamples the given image using the enabled resampling methods and
         saves the results to the specified path.
@@ -58,12 +68,20 @@ class Resampling:
         path : str
             The path to save the resampled images to.
         """
-        for method_name, method in self.methods.items():
+        saving_images = self.config["saving_files"]
+        output_dir = self.config["output_dir"]
+
+        for method_name in self.config["methods"]:
             if self.config["methods"][method_name]["enabled"]:
                 spacing = self.config["methods"][method_name]["spacing"]
-                resampled_image = method(image, spacing)
-                filename = os.path.join(path, f"{method_name}.nii.gz")
-                nib.save(nib.Nifti1Image(resampled_image, np.eye(4)), filename)
+                func = self.methods.get(method_name, None)
+                if func:
+                    resampled_image = func(image, spacing)
+                if saving_images:
+                    new_dir, img_id = prepare_output_directory(output_dir, image_path)
+                    filename = os.path.join(new_dir, f"{img_id}_{method_name}_resampled.nii.gz")
+                    nib.save(resampled_image, filename)
+                return resampled_image
 
     def resample_with_ants(self, image, spacing):
         """
@@ -111,3 +129,50 @@ class Resampling:
         scale_factors = [current_spacing[i] / spacing[i] for i in range(3)]
         resampled_image = zoom(image, scale_factors, order=1)
         return resampled_image
+
+    def resample_with_sitk(self, image, _):
+        """
+        Resamples and aligns the given moving image to have the same orientation,
+        spacing, and origin as the fixed image.
+
+        Parameters
+        ----------
+        moving_img : SimpleITK.Image
+            The moving image to resample.
+        fixed_img : SimpleITK.Image
+            The fixed image to align with.
+
+        Returns
+        -------
+        SimpleITK.Image
+            The resampled and aligned image.
+        """
+        template = self.config["methods"]["sitk"]["reference"]
+        interp_type = self.config["methods"]["sitk"]["interpolation"]
+
+        moving_img = nib_to_sitk(image)
+        fixed_img = sitk.ReadImage(template, sitk.sitkFloat32)
+
+        try:
+            if interp_type == "linear":
+                interp_type = sitk.sitkLinear
+            elif interp_type == "bspline":
+                interp_type = sitk.sitkBSpline
+            elif interp_type == "nearest_neighbor":
+                interp_type = sitk.sitkNearestNeighbor
+
+            resampler = sitk.ResampleImageFilter()
+            resampler.SetOutputDirection(fixed_img.GetDirection())
+            resampler.SetOutputSpacing(fixed_img.GetSpacing())
+            resampler.SetSize(fixed_img.GetSize())
+            resampler.SetOutputOrigin(fixed_img.GetOrigin())
+            resampler.SetDefaultPixelValue(fixed_img.GetPixelIDValue())
+            resampler.SetOutputPixelType(sitk.sitkFloat32)
+            resampler.SetInterpolator(interp_type)
+
+            aligned_moving_img = resampler.Execute(moving_img)
+            aligned_moving_img = sitk_to_nib(aligned_moving_img)
+        except ExceptionGroup:
+            print("Exception thrown while setting up the resampling filter.")
+
+        return aligned_moving_img
