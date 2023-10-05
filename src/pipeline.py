@@ -114,7 +114,6 @@ class Pipeline:
                 ) = self.apply_steps(image, path)
 
                 self.image_saving.run(image, path)
-                print(processed_data_by_step)
                 if self.config["image_visualization"]["enabled"]:
                     self.image_visualization.run(
                         initial_image,

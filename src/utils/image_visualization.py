@@ -32,7 +32,8 @@ class ImageVisualization:
         n_steps = len(applied_steps)
 
         # Create combined subplots
-        _, axes = plt.subplots(n_steps + 1, 2, figsize=(20, 5 * (n_steps + 1)), squeeze=False)
+        n_rows = n_steps // 2 + 1 if n_steps % 2 == 0 else n_steps // 2 + 2
+        _, axes = plt.subplots(n_rows, 2, figsize=(20, 5 * n_rows), squeeze=False)
 
         # Display initial image and template
         axes[0, 0].imshow(self._get_slice(initial_image).T, cmap="gray", origin="lower")
@@ -43,13 +44,15 @@ class ImageVisualization:
         # Display images after each preprocessing step
         for i, step_name in enumerate(applied_steps):
             image_after = processed_data_by_step[i]
-
             slice_after = self._get_slice(image_after)
-            axes[i + 1, 0].imshow(slice_after.T, cmap="gray", origin="lower")
-            axes[i + 1, 0].set_title(f"After {step_name}")
 
-            # Optionally leave the second column empty or use it for another visualization
-            axes[i + 1, 1].axis("off")
+            # Calculate row and column index
+            row = (i // 2) + 1  # Incremented by 1 to account for the initial row
+            col = i % 2
+
+            # The 'After [step]' image in the respective column
+            axes[row, col].imshow(slice_after.T, cmap="gray", origin="lower")
+            axes[row, col].set_title(f"After {step_name}")
 
         plt.tight_layout()
         plt.savefig(self.output_file)

@@ -82,6 +82,7 @@ def prepare_output_directory(output_dir, image_path):
 
 
 def convert_nii_gz_to_nii(nii_gz_path):
+    """Simple conversion to .nii format."""
     img = nib.load(nii_gz_path)
     nii_path = nii_gz_path[:-3]
     nib.save(img, nii_path)

@@ -153,8 +153,6 @@ class Resampling:
         fixed_img = nib.load(template)
         fixed_img = nib.as_closest_canonical(fixed_img)
         fixed_img = nib_to_sitk(fixed_img)
-        # print("Fixed image direction:", fixed_img.GetDirection())
-        print("Fixed image size:", fixed_img.GetSize())
 
         try:
             if interp_type == "linear":
@@ -183,11 +181,8 @@ class Resampling:
             resampler.SetInterpolator(interp_type)
 
             resampled_img = resampler.Execute(fixed_img)
-            print("Resampled image size:", resampled_img.GetSize())
-            # print("Resampled Fixed image direction:", resampled_img.GetDirection())
 
             resampled_img = sitk_to_nib(resampled_img)
-            print("Resampled image size nib:", resampled_img.shape)
 
         except ExceptionGroup:
             print("Exception thrown while setting up the resampling filter.")

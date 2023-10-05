@@ -19,8 +19,8 @@
         "output_file": "/home/juanqui55/git/mri_preprocessing/data/output/output_file.png"
     },
     "bias_field_correction": {
-        "enabled": false,
-        "saving_files": false,
+        "enabled": true,
+        "saving_files": true,
         "output_dir": "/home/juanqui55/git/mri_preprocessing/data/output",
         "methods": {
             "sitk":{
