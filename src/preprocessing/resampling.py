@@ -7,17 +7,14 @@ target voxel spacing for each method.
 """
 import os
 
+import itk
 import nibabel as nib
 import numpy as np
 import SimpleITK as sitk
 from nipype.interfaces.ants import ResampleImageBySpacing
 from scipy.ndimage import zoom
 
-from src.utils.helper_functions import (
-    nib_to_sitk,
-    prepare_output_directory,
-    sitk_to_nib,
-)
+from src.utils import helper_functions as hf
 
 
 class Resampling:
@@ -54,6 +51,7 @@ class Resampling:
             "ants": self.resample_with_ants,
             "scipy": self.resample_with_scipy,
             "sitk": self.resample_with_sitk,
+            "itk": self.resample_with_itk,
         }
 
     def run(self, image, image_path: str):
@@ -73,12 +71,12 @@ class Resampling:
 
         for method_name in self.config["methods"]:
             if self.config["methods"][method_name]["enabled"]:
-                spacing = self.config["methods"][method_name]["spacing"]
+                spacing = self.config["methods"][method_name].get("spacing", None)
                 func = self.methods.get(method_name, None)
                 if func:
                     resampled_image = func(image, spacing)
                 if saving_images:
-                    new_dir, img_id = prepare_output_directory(output_dir, image_path)
+                    new_dir, img_id = hf.prepare_output_directory(output_dir, image_path)
                     filename = os.path.join(new_dir, f"{img_id}_{method_name}_resampled.nii.gz")
                     nib.save(resampled_image, filename)
                 return resampled_image
@@ -137,22 +135,20 @@ class Resampling:
 
         Parameters
         ----------
-        moving_img : SimpleITK.Image
-            The moving image to resample.
         fixed_img : SimpleITK.Image
-            The fixed image to align with.
+            The fixed image to resample. Is read from config.
 
         Returns
         -------
         SimpleITK.Image
             The resampled and aligned image.
         """
-        template = self.config["methods"]["sitk"]["reference"]
+        template = self.config["reference"]
         interp_type = self.config["methods"]["sitk"]["interpolation"]
 
         fixed_img = nib.load(template)
         fixed_img = nib.as_closest_canonical(fixed_img)
-        fixed_img = nib_to_sitk(fixed_img)
+        fixed_img = hf.nib_to_sitk(fixed_img)
 
         try:
             if interp_type == "linear":
@@ -182,9 +178,51 @@ class Resampling:
 
             resampled_img = resampler.Execute(fixed_img)
 
-            resampled_img = sitk_to_nib(resampled_img)
+            resampled_img = hf.sitk_to_nib(resampled_img)
 
         except ExceptionGroup:
             print("Exception thrown while setting up the resampling filter.")
 
         return resampled_img
+
+    def resample_with_itk(self, moving_image: nib.Nifti1Image, _) -> nib.Nifti1Image:
+        """Resample the moving image to match the resolution and voxel
+        spacing of the fixed image using ITK."""
+        template = self.config["reference"]
+        fixed_img = nib.load(template)
+        fixed_img = nib.as_closest_canonical(fixed_img)
+        fixed_image = hf.nib_to_itk(fixed_img)
+
+        moving_image = nib.as_closest_canonical(moving_image)
+        moving_image = hf.nib_to_itk(moving_image)
+
+        # Calculate scale factors
+        spacing_fixed = np.array(fixed_image.GetSpacing())
+        spacing_moving = np.array(moving_image.GetSpacing())
+        scale_factors = spacing_fixed / spacing_moving
+
+        dimension = moving_image.GetImageDimension()
+        # pylint: disable-next=E1101
+        scale_transform = itk.ScaleTransform[itk.D, dimension].New()
+        scale_transform_parameters = scale_transform.GetParameters()
+        for i, scale in enumerate(scale_factors):
+            scale_transform_parameters[i] = scale
+        scale_transform_center = [
+            float(int(s / 2)) for s in moving_image.GetLargestPossibleRegion().GetSize()
+        ]
+        scale_transform.SetParameters(scale_transform_parameters)
+        scale_transform.SetCenter(scale_transform_center)
+        # pylint: disable-next=E1101
+        interpolator = itk.LinearInterpolateImageFunction.New(moving_image)
+        # pylint: disable-next=E1101
+        resampled_image = itk.resample_image_filter(
+            moving_image,
+            transform=scale_transform,
+            interpolator=interpolator,
+            size=fixed_image.GetLargestPossibleRegion().GetSize(),
+            output_spacing=fixed_image.GetSpacing(),
+            output_origin=fixed_image.GetOrigin(),
+        )
+
+        resampled_image = hf.itk_to_nib(resampled_image)
+        return resampled_image

@@ -17,6 +17,7 @@ import SimpleITK as sitk
 from nipype.interfaces import spm
 from nipype.interfaces.fsl import FLIRT
 
+from src.utils import helper_functions as hf
 from src.utils.helper_functions import (
     convert_nii_gz_to_nii,
     nib_to_sitk,
@@ -72,64 +73,65 @@ class Registration:
                     nib.save(image, filename)
         return image
 
-    def itk_registration(self, image, path):
+    def itk_registration(self, image: nib.Nifti1Image, image_path: str):
         """
         Registers an image to a template image using the ITK registration method.
 
         Args:
             image: The image to register.
-            template_path (str): The path to the template image.
+            image_path: The path to the image.
 
         Returns:
             The registered image.
         """
-        template = self.config["methods"]["itk"]["template"]
-        output_path = self.config["methods"]["itk"]["output_path"]
-
-        # Ensure the image file exists
+        template = self.config["reference"]
         if not os.path.exists(template):
             raise FileNotFoundError(f"No file found at {template}")
 
-        fixed_image = itk.imread(template, itk.F)
+        try:
+            fixed_img = nib.load(template)
+            fixed_img = nib.as_closest_canonical(fixed_img)
+            fixed_image = hf.nib_to_itk(fixed_img)
 
-        # Import Parameter Map
-        parameter_object = itk.ParameterObject.New()
-        parameter_object.AddParameterFile("data/registration_templates/Parameters_Rigid.txt")
+            moving_image = nib.as_closest_canonical(image)
+            moving_image = hf.nib_to_itk(moving_image)
 
-        if "nii" in path:
-            # Call registration function
-            try:
-                moving_image = itk.imread(path, itk.F)
-                image_id = path.split("/")[-1]
+            # Define the transformation type: Rigid 3D
+            transform = itk.CenteredRigid2DTransform[itk.D].New()
 
-                new_dir = output_path + "/" + image_id.split(".")[0]
-                if not os.path.exists(new_dir):
-                    os.mkdir(new_dir)
+            # Create and set up the optimizer
+            optimizer = itk.RegularStepGradientDescentOptimizerv4[itk.D].New()
+            optimizer.SetLearningRate(4)
+            optimizer.SetMinimumStepLength(0.001)
+            optimizer.SetNumberOfIterations(200)
 
-                result_image, _ = itk.elastix_registration_method(
-                    fixed_image,
-                    moving_image,
-                    parameter_object=parameter_object,
-                    output_directory=new_dir,
-                    log_to_console=False,
-                )
+            # Define the metric: Mattes Mutual Information
+            metric = itk.MattesMutualInformationImageToImageMetricv4[
+                itk.Image[itk.F, 3], itk.Image[itk.F, 3]
+            ].New()
 
-                itk.imwrite(
-                    result_image, new_dir + "/" + image_id.split(".")[0] + "_registered" + ".nii.gz"
-                )
+            # Define the registration framework and set its components
+            registration = itk.ImageRegistrationMethodv4.New(
+                FixedImage=fixed_image,
+                MovingImage=moving_image,
+                Metric=metric,
+                Optimizer=optimizer,
+                InitialTransform=transform,
+            )
 
-                print("Registered ", image_id)
+            # Set up the interpolator
+            interpolator = itk.LinearInterpolateImageFunction[itk.Image[itk.F, 3], itk.D].New()
+            registration.SetInterpolator(interpolator)
 
-                # Convert ITK image to numpy array, create NIfTI image from array
-                np_array = itk.GetArrayFromImage(result_image)
-                nifti_image = nib.Nifti1Image(np_array, np.eye(4))
-                return nifti_image
+            # Start the registration process
+            registration.Update()
+            image_registered = registration.GetOutput()
 
-            except ExceptionGroup:
-                print("Cannot transform", path.split("/")[-1])
+            image_registered = hf.itk_to_nib(image_registered)
+            return image_registered
 
-        else:
-            raise FileNotFoundError("File has not .nii suffix on it!")
+        except ExceptionGroup:
+            print("Cannot transform", image_path.split("/")[-1])
 
     def spm_registration(self, image, path):
         """
@@ -215,15 +217,13 @@ class Registration:
 
         return result.outputs
 
-    def sitk_registration(self, resampled_fixed_img, img_path: str):
-        # template = self.config["reference"]
-
-        # print("Intializing Sitk registration...")
-        # # Ensure the image file exists
-        # if not os.path.exists(template):
-        #     raise FileNotFoundError(f"No file found at {template}")
-
-        # fixed_img = sitk.ReadImage(template, sitk.sitkFloat32)
+    def sitk_registration(
+        self, resampled_fixed_img: nib.Nifti1Image, img_path: str
+    ) -> nib.Nifti1Image:
+        """Register the moving image to the fixed image using SimpleITK.
+        This method takes into account a resampled template image for registration
+        and the extracts the moving image from the image path.
+        """
         resampled_fixed_img = nib_to_sitk(resampled_fixed_img)
 
         if "nii" in img_path:
@@ -231,9 +231,6 @@ class Registration:
                 moving_img = nib.load(img_path)
                 moving_img = nib.as_closest_canonical(moving_img)
                 moving_img = nib_to_sitk(moving_img)
-                # moving_img = sitk.ReadImage(img_path, sitk.sitkFloat32)
-                # print("Fixed image direction: ", resampled_fixed_img.GetDirection())
-                # print("Moving image direction: ", moving_img.GetDirection())
 
                 transform = sitk.CenteredTransformInitializer(
                     resampled_fixed_img,
@@ -261,7 +258,6 @@ class Registration:
                 print("Sitk registration ongoing...")
                 final_transform = registration_method.Execute(resampled_fixed_img, moving_img)
 
-                # print("Final transform parameters: ", final_transform.GetParameters())
                 registered_image = sitk.Resample(
                     moving_img,
                     resampled_fixed_img,
@@ -270,7 +266,6 @@ class Registration:
                     0.0,
                     moving_img.GetPixelID(),
                 )
-                # print("Registration moving image direction: ", registered_image.GetDirection())
 
                 registered_image = sitk_to_nib(registered_image)
                 print("Sitk registration finished...")

@@ -1,6 +1,7 @@
 """Helper functions for the project."""
 import os
 
+import itk
 import nibabel as nib
 import numpy as np
 import SimpleITK as sitk
@@ -88,3 +89,72 @@ def convert_nii_gz_to_nii(nii_gz_path):
     nib.save(img, nii_path)
 
     return nii_path
+
+
+def nib_to_itk(nib_image: nib.Nifti1Image) -> itk.image:
+    """
+    Convert a nibabel Nifti1Image to an ITK Image while preserving spatial conditions.
+
+    Args:
+        nib_image (nib.Nifti1Image): Input nibabel image.
+
+    Returns:
+        itk.Image: Converted ITK image.
+    """
+
+    # Extract array and affine from nibabel image
+    array_data = nib_image.get_fdata()
+    affine = nib_image.affine
+    order = [2, 1, 0]
+    array_data = array_data.transpose(order)
+    # Convert array data to ITK image
+    itk_image = itk.GetImageFromArray(array_data.astype(np.float32))
+
+    # Extract origin, spacing, and direction from affine
+    origin = affine[:3, 3]
+    spacing = np.sqrt((affine[:3, :3] ** 2).sum(axis=0))
+    direction_matrix = affine[:3, :3] / spacing
+
+    # The direction in ITK is given by the transpose of the direction matrix
+    direction = itk.matrix_from_array(np.linalg.inv(direction_matrix).T)
+
+    # Set the spatial information in the ITK image
+    itk_image.SetOrigin(origin)
+    itk_image.SetSpacing(spacing)
+    itk_image.SetDirection(direction)
+
+    return itk_image
+
+
+def itk_to_nib(itk_image: itk.image) -> nib.Nifti1Image:
+    """
+    Convert an ITK Image to a nibabel Nifti1Image while preserving spatial conditions.
+
+    Args:
+        itk_image (itk.Image): Input ITK image.
+
+    Returns:
+        nib.Nifti1Image: Converted nibabel image.
+    """
+
+    # Extract array from ITK image
+    array_data = itk.GetArrayFromImage(itk_image)
+
+    # Extract origin, spacing, and direction from ITK image
+    origin = np.array(itk_image.GetOrigin())
+    spacing = np.array(itk_image.GetSpacing())
+    direction = itk.array_from_matrix(itk_image.GetDirection())
+
+    # Construct affine from origin, spacing, and direction
+    affine = np.eye(4)
+    affine[:3, :3] = direction * spacing
+    affine[:3, 3] = origin
+
+    order = [2, 1, 0]
+    affine[:3, :3] = affine[:3, :3][order]
+    array_data = array_data.transpose(order)
+
+    # Create nibabel image with the array and affine
+    nib_image = nib.Nifti1Image(array_data, affine)
+
+    return nib_image

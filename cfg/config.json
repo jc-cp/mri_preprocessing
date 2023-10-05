@@ -154,6 +154,7 @@
         "enabled": true,
         "saving_files": true,
         "output_dir": "/home/juanqui55/git/mri_preprocessing/data/output",
+        "reference": "/home/juanqui55/git/mri_preprocessing/data/registration_templates/temp_head.nii.gz",
         "methods":{
             "ants":{
                 "enabled": false,
@@ -166,10 +167,12 @@
                 "order": 0
             },
             "sitk":{
-                "enabled": true,
+                "enabled": false,
                 "spacing": [1, 1, 1],
-                "reference": "/home/juanqui55/git/mri_preprocessing/data/registration_templates/temp_head.nii.gz",
                 "interpolation": "linear"
+            },
+            "itk":{
+                "enabled": true
             }
         }
     },

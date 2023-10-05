@@ -206,7 +206,7 @@ Skull stripping is a critical pre-processing step in the analysis of neuroimagin
 - [ ] Have a smri template JSON
 - [ ] Have a dti template JSON
 - [ ] Edit readme.md folder structure overview
-- [ ] Create the requirements.txt 
+- [ ] Adjust the requirements.txt 
 - [ ] Think about deployment in docker
 - [ ] Edit readme.md folder structure overview
 - [ ] Fix the Pylint CI errors
@@ -215,8 +215,8 @@ Skull stripping is a critical pre-processing step in the analysis of neuroimagin
 
 <mark>PP steps</mark>
 - [ ] Implement LAPGM Bias Field Correction
-- [ ] Check orientation of images as rescaling iterates in the z axis
-- [ ] Check resmapling with ants and scipy
+- [x] Check orientation of images as rescaling iterates in the z axis
+- [ ] Check resampling with ants and scipy
 - [ ] Check spm and fsl registration
 - [ ] Implement option for HDBET skull stripping and add to the installation
 - [ ] Implement intensity normalization option from https://github.com/jcreinhold/intensity-normalization
