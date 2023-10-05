@@ -9,7 +9,7 @@ import SimpleITK as sitk
 def sitk_to_nib(sitk_image):
     """Conversion from SimpleITK to Nibabel preserving spatial information."""
     np_image = sitk.GetArrayFromImage(sitk_image)
-
+    np_image = np.transpose(np_image, (2, 1, 0))
     origin = np.array(sitk_image.GetOrigin())
     spacing = np.array(sitk_image.GetSpacing())
     direction = np.array(sitk_image.GetDirection()).reshape((3, 3))
@@ -48,6 +48,8 @@ def nib_to_sitk(nib_image):
     sitk_image.SetOrigin(origin)
     sitk_image.SetSpacing(spacing)
     sitk_image.SetDirection(direction)
+
+    sitk_image = sitk.Cast(sitk_image, sitk.sitkFloat32)
 
     return sitk_image
 

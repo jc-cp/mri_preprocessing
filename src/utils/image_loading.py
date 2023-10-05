@@ -28,7 +28,8 @@ class ImageLoading:
 
     def run(self):
         """Main function to load the files."""
-        for image_path in self._get_image_paths():
+        image_paths = self.get_image_paths()
+        for image_path in image_paths:
             try:
                 if image_path.lower().endswith(".dcm"):
                     print("Loading images of type: DICOM.")
@@ -41,11 +42,30 @@ class ImageLoading:
                     image = nib.as_closest_canonical(image)  # Reorient to closest canonical (RAS)
                 else:
                     raise ValueError(f"Unsupported file extension in file {image_path}")
-                yield image, image_path
             except (IOError, RuntimeError, FileNotFoundError) as error:
                 print(f"Error loading image from {image_path}: {str(error)}")
+            finally:
+                yield image, image_path
 
-    def _get_image_paths(self):
+    def get_image_paths(self):
+        """
+        Yields paths to medical image files.
+
+        If a CSV file path is specified in the configuration, the method reads the file
+        and yields the image paths in the "image_path" column.
+        If a list of image paths is specified in the configuration, the method yields
+        the paths directly.
+        If a directory path is specified in the configuration, the method searches for
+        image files in the directory and yields their paths.
+        If no valid image path or file with image paths is provided, the method raises a ValueError.
+
+        Yields:
+            A path to a medical image file.
+
+        Raises:
+            ValueError: If no valid image path or file with image paths is provided.
+            FileNotFoundError: If no file or directory is found at a specified path.
+        """
         if self.file_path and self.file_path.lower().endswith(".csv"):
             d_f = pd.read_csv(self.file_path)
             for image_path in d_f["image_path"].tolist():

@@ -5,14 +5,16 @@ import nibabel as nib
 
 
 class ImageSaving:
+    """Class for saving images to disk once all of the preprocessing is done."""
+
     def __init__(self, config: dict):
         self.output_dir = config["output_dir"]
         self.input_dir = config["input_dir"]
 
-    def run(self, images, input_paths):
-        for image, input_path in zip(images, input_paths):
-            output_path = self._get_output_path(input_path)
-            self._save_image(image, output_path)
+    def run(self, image, input_path):
+        """Main saving function."""
+        output_path = self._get_output_path(input_path)
+        self._save_image(image, output_path)
 
     def _get_output_path(self, input_path):
         # Get the relative path to the input file from the root input directory

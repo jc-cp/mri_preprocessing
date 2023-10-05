@@ -216,19 +216,23 @@ class Registration:
         return result.outputs
 
     def sitk_registration(self, resampled_fixed_img, img_path: str):
-        template = self.config["methods"]["itk"]["template"]
+        # template = self.config["reference"]
 
-        print("Intializing Sitk registration...")
-        # Ensure the image file exists
-        if not os.path.exists(template):
-            raise FileNotFoundError(f"No file found at {template}")
+        # print("Intializing Sitk registration...")
+        # # Ensure the image file exists
+        # if not os.path.exists(template):
+        #     raise FileNotFoundError(f"No file found at {template}")
 
         # fixed_img = sitk.ReadImage(template, sitk.sitkFloat32)
         resampled_fixed_img = nib_to_sitk(resampled_fixed_img)
+
         if "nii" in img_path:
             try:
-                moving_img = sitk.ReadImage(img_path, sitk.sitkFloat32)
-                # print("Fixed image direction: ", fixed_img.GetDirection())
+                moving_img = nib.load(img_path)
+                moving_img = nib.as_closest_canonical(moving_img)
+                moving_img = nib_to_sitk(moving_img)
+                # moving_img = sitk.ReadImage(img_path, sitk.sitkFloat32)
+                # print("Fixed image direction: ", resampled_fixed_img.GetDirection())
                 # print("Moving image direction: ", moving_img.GetDirection())
 
                 transform = sitk.CenteredTransformInitializer(
@@ -266,6 +270,7 @@ class Registration:
                     0.0,
                     moving_img.GetPixelID(),
                 )
+                # print("Registration moving image direction: ", registered_image.GetDirection())
 
                 registered_image = sitk_to_nib(registered_image)
                 print("Sitk registration finished...")

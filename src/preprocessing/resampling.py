@@ -130,7 +130,7 @@ class Resampling:
         resampled_image = zoom(image, scale_factors, order=1)
         return resampled_image
 
-    def resample_with_sitk(self, image, _) -> nib.Nifti1Image:
+    def resample_with_sitk(self, _, spacing) -> nib.Nifti1Image:
         """
         Resamples and aligns the given moving image to have the same orientation,
         spacing, and origin as the fixed image.
@@ -150,8 +150,11 @@ class Resampling:
         template = self.config["methods"]["sitk"]["reference"]
         interp_type = self.config["methods"]["sitk"]["interpolation"]
 
-        moving_img = nib_to_sitk(image)
-        fixed_img = sitk.ReadImage(template, sitk.sitkFloat32)
+        fixed_img = nib.load(template)
+        fixed_img = nib.as_closest_canonical(fixed_img)
+        fixed_img = nib_to_sitk(fixed_img)
+        # print("Fixed image direction:", fixed_img.GetDirection())
+        print("Fixed image size:", fixed_img.GetSize())
 
         try:
             if interp_type == "linear":
@@ -163,11 +166,7 @@ class Resampling:
 
             old_size = fixed_img.GetSize()
             old_spacing = fixed_img.GetSpacing()
-            new_spacing = (
-                1,
-                1,
-                1,
-            )
+            new_spacing = tuple(spacing)
             new_size = [
                 int(round((old_size[0] * old_spacing[0]) / float(new_spacing[0]))),
                 int(round((old_size[1] * old_spacing[1]) / float(new_spacing[1]))),
@@ -180,13 +179,16 @@ class Resampling:
             resampler.SetSize(new_size)
             resampler.SetOutputOrigin(fixed_img.GetOrigin())
             resampler.SetDefaultPixelValue(fixed_img.GetPixelIDValue())
-            # resampler.SetOutputPixelType(sitk.sitkFloat32)
+            resampler.SetOutputPixelType(sitk.sitkFloat32)
             resampler.SetInterpolator(interp_type)
-            print(fixed_img.GetDirection())
-            print(moving_img.GetDirection())
-            resampled_img = resampler.Execute(moving_img)
+
+            resampled_img = resampler.Execute(fixed_img)
+            print("Resampled image size:", resampled_img.GetSize())
+            # print("Resampled Fixed image direction:", resampled_img.GetDirection())
 
             resampled_img = sitk_to_nib(resampled_img)
+            print("Resampled image size nib:", resampled_img.shape)
+
         except ExceptionGroup:
             print("Exception thrown while setting up the resampling filter.")
 

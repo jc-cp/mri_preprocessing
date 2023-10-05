@@ -19,51 +19,37 @@ class ImageVisualization:
     def __init__(self, config: int):
         self.output_file = config["output_file"]
 
-    def run(
-        self, initial_image, template, original_data_by_step, processed_data_by_step, applied_steps
-    ):
+    def run(self, initial_image, template, processed_data_by_step, applied_steps):
         """
         Visualizes medical images before and after processing.
-
-        Args:
-            original_data_by_step (list): A list of lists of medical images before processing.
-            processed_data_by_step (list): A list of lists of medical images after processing.
-            applied_steps (list): A list of strings representing the processing steps applied.
-
-        Raises:
-            ValueError: If `original_data_by_step` or `processed_data_by_step` is empty.
+        ... [rest of the docstring remains unchanged] ...
         """
-        if not original_data_by_step or not processed_data_by_step:
+        template = nib.load(template)
+        template = nib.as_closest_canonical(template)
+        if not processed_data_by_step:
             raise ValueError("No image data to visualize. 'image_data_dict' is empty.")
 
         n_steps = len(applied_steps)
-        n_images = len(original_data_by_step[0])
 
         # Create combined subplots
-        _, axes = plt.subplots(
-            n_steps + 1, 2 * n_images, figsize=(20, 5 * (n_steps + 1)), squeeze=False
-        )
+        _, axes = plt.subplots(n_steps + 1, 2, figsize=(20, 5 * (n_steps + 1)), squeeze=False)
 
-        # Initial images
+        # Display initial image and template
         axes[0, 0].imshow(self._get_slice(initial_image).T, cmap="gray", origin="lower")
         axes[0, 0].set_title("Initial Image")
         axes[0, 1].imshow(self._get_slice(template).T, cmap="gray", origin="lower")
         axes[0, 1].set_title("Template Image")
 
-        # Processed images
+        # Display images after each preprocessing step
         for i, step_name in enumerate(applied_steps):
-            images_before = original_data_by_step[i]
-            images_after = processed_data_by_step[i]
+            image_after = processed_data_by_step[i]
 
-            for j, (image_before, image_after) in enumerate(zip(images_before, images_after)):
-                slice_before = self._get_slice(image_before)
-                slice_after = self._get_slice(image_after)
+            slice_after = self._get_slice(image_after)
+            axes[i + 1, 0].imshow(slice_after.T, cmap="gray", origin="lower")
+            axes[i + 1, 0].set_title(f"After {step_name}")
 
-                axes[i + 1, 2 * j].imshow(slice_before.T, cmap="gray", origin="lower")
-                axes[i + 1, 2 * j].set_title(f"Before {step_name}")
-
-                axes[i + 1, 2 * j + 1].imshow(slice_after.T, cmap="gray", origin="lower")
-                axes[i + 1, 2 * j + 1].set_title(f"After {step_name}")
+            # Optionally leave the second column empty or use it for another visualization
+            axes[i + 1, 1].axis("off")
 
         plt.tight_layout()
         plt.savefig(self.output_file)

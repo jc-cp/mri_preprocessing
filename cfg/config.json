@@ -20,7 +20,7 @@
     },
     "bias_field_correction": {
         "enabled": false,
-        "saving_files": true,
+        "saving_files": false,
         "output_dir": "/home/juanqui55/git/mri_preprocessing/data/output",
         "methods": {
             "sitk":{
@@ -132,24 +132,21 @@
         "enabled": true,
         "saving_files": true,
         "output_dir": "/home/juanqui55/git/mri_preprocessing/data/output",
+        "reference": "/home/juanqui55/git/mri_preprocessing/data/registration_templates/temp_head.nii.gz",
         "methods":{
             "spm":{
-                "enabled": false,
-                "template": "/home/juanqui55/git/mri_preprocessing/data/registration_templates/temp_head.nii.gz" 
+                "enabled": false
             },
             "itk":{
-                "enabled": false, 
-                "template": "/home/juanqui55/git/mri_preprocessing/data/registration_templates/temp_head.nii.gz" 
+                "enabled": false
             },
             "fsl":{
                 "enabled": false,
                 "resolution": 1.0,
-                "reference": "/home/juanqui55/git/mri_preprocessing/data/registration_templates/temp_head.nii.gz",
                 "interp": "trilinear"
             },
             "sitk":{
-                "enabled": true,
-                "reference": "/home/juanqui55/git/mri_preprocessing/data/registration_templates/temp_head.nii.gz"
+                "enabled": true
             }
         }
     },
@@ -170,7 +167,7 @@
             },
             "sitk":{
                 "enabled": true,
-                "spacing": [1.0, 1.0, 1.0],
+                "spacing": [1, 1, 1],
                 "reference": "/home/juanqui55/git/mri_preprocessing/data/registration_templates/temp_head.nii.gz",
                 "interpolation": "linear"
             }
