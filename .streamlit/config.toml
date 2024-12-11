@@ -1,0 +1,22 @@
+[ui]
+hideSidebarNav = true
+hideStreamlitBranding = true
+
+[theme]
+primaryColor = "#4A90E2"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F0F2F6"
+textColor = "#262730"
+font = "sans serif"
+
+[server]
+maxUploadSize = 200
+enableXsrfProtection = false
+runOnSave = true
+
+[browser]
+gatherUsageStats = false
+
+[layout]
+# Make the page fill the full width of the screen
+layout = "wide" 
