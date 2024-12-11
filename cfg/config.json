@@ -1,4 +1,3 @@
-
 {   
     "image_conversion":{
         "enabled": true
@@ -24,14 +23,22 @@
         "output_dir": "/home/juanqui55/git/mri_preprocessing/data/output",
         "methods": {
             "sitk":{
-                "enabled": true,
-                "simple": true,
-                "max_number_of_iterations": [50, 50, 30, 20],
-                "bf_fw_hmax": 0.15,
-                "convergence_threshold": 0.001
+                "enabled": false,
+                "automatic": false,
+                "n_iterations_level": [50, 50, 50, 50],
+                "convergence_threshold": 0.001,
+                "bf_fwhm": 0.15,
+                "wiener_noise": 0.01,
+                "histogram_bins": 200
             },
             "lapgm":{
-                "enabled": false
+                "enabled": true,
+                "use_gpu": true,
+                "normalize": true,
+                "target_intensity": 1000.0,
+                "tau": 1.0,
+                "n_classes": 3,
+                "alpha": 2.0
             }
         }
     },

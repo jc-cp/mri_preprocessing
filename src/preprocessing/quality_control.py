@@ -30,13 +30,13 @@ class QualityControl:
             # save the report
             with open(self.config.get("qc_report_path", "qc_report.json"), "w") as f:
                 json.dump(self.qc_report, f)
-            return True
+            return img
 
         except Exception as error:
             print(f"Quality control failed: {str(error)}")
             with open(self.config.get("qc_report_path", "qc_report.json"), "w") as f:
                 json.dump(self.qc_report, f)
-            return False
+            return img
 
     def _check_dimensions(self, img):
         """Check image dimensions and size."""

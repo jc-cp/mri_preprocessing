@@ -74,7 +74,7 @@ class Pipeline:
             "quality_control": QualityControl,
             # add here motion correction 
             # add here slice timing correction
-            #"bias_field_correction": BiasFieldCorrection,
+            "bias_field_correction": BiasFieldCorrection,
             #"resampling": Resampling,
             #"registration": Registration,
             #"skull_stripping": SkullStripping,
@@ -108,7 +108,6 @@ class Pipeline:
                 # Save initial image and template for later visualization
                 initial_image = image
                 print(f"Initial image has shape: {initial_image.shape}")
-                template_image = self.config["registration"]["reference"]
 
                 # Apply preprocessing steps
                 (
@@ -118,6 +117,7 @@ class Pipeline:
 
                 self.image_saving.run(image, path)
                 if self.config["image_visualization"]["enabled"]:
+                    template_image = self.config["registration"]["reference"]
                     self.image_visualization.run(
                         initial_image,
                         template_image,
