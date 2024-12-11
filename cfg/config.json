@@ -124,9 +124,15 @@
         }
     },
     "quality_control":{
-        "enabled":false,
-        "expected_dims": [256, 256, 256],
-        "expected_voxel_size": [1.0, 1.0, 1.0]
+        "enabled":true,
+        "qc_report_path": "/home/juanqui55/git/mri_preprocessing/data/output/qc_report.json",
+        "expected_dims": [130, 256, 256],
+        "expected_voxel_size": [1.0, 1.0, 1.0],
+        "min_voxels": 10000,
+        "max_aspect_ratio": 4.0,
+        "expected_orientation": ["R", "A", "S"],
+        "min_snr": 5.0,
+        "min_contrast": 0.1
     },
     "registration":{
         "enabled": true,

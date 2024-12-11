@@ -20,7 +20,7 @@ Example usage:
 """
 import json
 import logging
-
+from src.preprocessing.quality_control import QualityControl
 from src.preprocessing.bias_field_correction import BiasFieldCorrection
 from src.preprocessing.binning import Binning
 from src.preprocessing.denoising import Denoising
@@ -71,14 +71,17 @@ class Pipeline:
 
         # Map step names to classes, attention: the order here becomes relevant!
         self.step_classes = {
-            "bias_field_correction": BiasFieldCorrection,
-            "resampling": Resampling,
-            "registration": Registration,
-            "skull_stripping": SkullStripping,
-            "normalization": Normalization,
-            "filtering": Filtering,
-            "denoising": Denoising,
-            "binning": Binning
+            "quality_control": QualityControl,
+            # add here motion correction 
+            # add here slice timing correction
+            #"bias_field_correction": BiasFieldCorrection,
+            #"resampling": Resampling,
+            #"registration": Registration,
+            #"skull_stripping": SkullStripping,
+            #"denoising": Denoising,
+            #"normalization": Normalization,
+            #"filtering": Filtering,
+            #"binning": Binning
             # add other preprocessing steps...
         }
 
