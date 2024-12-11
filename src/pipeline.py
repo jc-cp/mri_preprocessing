@@ -100,14 +100,14 @@ class Pipeline:
             for image, path in self.image_loading.run():
                 # Do conversion to Nifti if needed
                 if self.config["image_conversion"]["enabled"]:
-                    image = self.image_conversion.run(image)
+                    image = self.image_conversion.run(path)
 
                 # Save initial image and template for later visualization
                 initial_image = image
+                print(f"Initial image has shape: {initial_image.shape}")
                 template_image = self.config["registration"]["reference"]
 
                 # Apply preprocessing steps
-
                 (
                     processed_data_by_step,
                     applied_steps,
@@ -122,7 +122,7 @@ class Pipeline:
                         applied_steps,
                     )
 
-        except ExceptionGroup as error:
+        except Exception as error:
             print(f"Error running pipeline: {error}")
 
     def apply_steps(self, image, image_path):

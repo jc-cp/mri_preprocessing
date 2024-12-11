@@ -1,17 +1,17 @@
 
 {   
     "image_conversion":{
-        "enabled": false
+        "enabled": true
     },    
     "image_loading":{
         "enabled": true,
-        "file_path": "/home/juanqui55/git/mri_preprocessing/data/input/images/233126.csv",
-        "input_dir": "/home/juanqui55/git/mri_preprocessing/data/input/images/",
+        "file_path": "/home/juanqui55/git/mri_preprocessing/data/input/example/MRHead.csv",
+        "input_dir": "/home/juanqui55/git/mri_preprocessing/data/input/example/",
         "recursive": true
     },
     "image_saving":{
         "enabled": true,
-        "input_dir": "/home/juanqui55/git/mri_preprocessing/data/input/images/",
+        "input_dir": "/home/juanqui55/git/mri_preprocessing/data/input/example/",
         "output_dir": "/home/juanqui55/git/mri_preprocessing/data/output/"
     },
     "image_visualization":{

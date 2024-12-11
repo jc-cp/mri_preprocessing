@@ -1,9 +1,11 @@
 """
-A module for loading medical images from DICOM or NIFTI files.
+A module for loading medical images from DICOM, NIFTI, or NRRD files.
 """
 import os
 
 import nibabel as nib
+import nrrd
+import numpy as np
 import pandas as pd
 from pydicom import dcmread
 from pydicom.filebase import DicomBytesIO
@@ -11,14 +13,7 @@ from pydicom.filebase import DicomBytesIO
 
 class ImageLoading:
     """
-    Class description:
-        1. Takes in a configuration dictionary that can specify a CSV file with image paths,
-        a directory with image paths, and a flag for whether to recursively search for images.
-        2. Retrieves image paths from a CSV file, if provided, or directly from the configuration.
-        3. Searches for images recursively in directories if the recursive flag is set to True,
-        otherwise it only searches for images in the specified directories.
-        4. Checks whether the images are in DICOM or NIFTI format, and loads them appropriately.
-        5. Adds all the loaded images to a list and returns them.
+    Class for loading medical images in DICOM, NIFTI, or NRRD formats.
     """
 
     def __init__(self, config: dict):
@@ -31,21 +26,32 @@ class ImageLoading:
         image_paths = self.get_image_paths()
         for image_path in image_paths:
             try:
-                if image_path.lower().endswith(".dcm"):
+                ext = image_path.split('.')[-1].lower() if '.' in image_path else ''
+                
+                if ext == 'dcm' or image_path.lower().endswith('.dcm'):
                     print("Loading images of type: DICOM.")
                     with open(image_path, "rb") as file:
                         bytesio_obj = DicomBytesIO(file.read())
                         image = dcmread(bytesio_obj)
-                elif image_path.lower().endswith(".nii") or image_path.lower().endswith(".gz"):
+                elif ext in ['nii', 'gz']:
                     print("Loading images of type: NIFTI.")
                     image = nib.load(image_path)
-                    image = nib.as_closest_canonical(image)  # Reorient to closest canonical (RAS)
+                elif ext == 'nrrd':
+                    print("Loading images of type: NRRD.")
+                    data, header = nrrd.read(image_path)
+                    # Simple wrapper class to maintain consistent interface
+                    class NRRDImage:
+                        def __init__(self, data, header):
+                            self.data = data
+                            self.header = header
+                            self.shape = data.shape
+                    image = NRRDImage(data, header)
                 else:
                     raise ValueError(f"Unsupported file extension in file {image_path}")
+                
+                yield image, image_path
             except (IOError, RuntimeError, FileNotFoundError) as error:
                 print(f"Error loading image from {image_path}: {str(error)}")
-            finally:
-                yield image, image_path
 
     def get_image_paths(self):
         """
@@ -86,11 +92,11 @@ class ImageLoading:
         if self.recursive:
             for root, _, files in os.walk(directory):
                 for file in files:
-                    if file.lower().endswith((".dcm", ".nii", ".gz")):
+                    if file.lower().endswith((".dcm", ".nii", ".gz", ".nrrd")):
                         yield os.path.join(root, file)
         else:
             for f in os.listdir(directory):
                 if os.path.isfile(os.path.join(directory, f)) and f.lower().endswith(
-                    (".dcm", ".nii", ".gz")
+                    (".dcm", ".nii", ".gz", ".nrrd")
                 ):
                     yield os.path.join(directory, f)
