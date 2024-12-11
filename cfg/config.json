@@ -4,23 +4,23 @@
     },    
     "image_loading":{
         "enabled": true,
-        "file_path": "/home/juanqui55/git/mri_preprocessing/data/input/example/MRHead.csv",
-        "input_dir": "/home/juanqui55/git/mri_preprocessing/data/input/example/",
+        "file_path": "./data/input/example/MRHead.csv",
+        "input_dir": "./data/input/example/",
         "recursive": true
     },
     "image_saving":{
         "enabled": true,
-        "input_dir": "/home/juanqui55/git/mri_preprocessing/data/input/example/",
-        "output_dir": "/home/juanqui55/git/mri_preprocessing/data/output/"
+        "input_dir": "./data/input/example/",
+        "output_dir": "./data/output/"
     },
     "image_visualization":{
         "enabled": true,
-        "output_file": "/home/juanqui55/git/mri_preprocessing/data/output/output_file.png"
+        "output_file": "./data/output/output_file.png"
     },
     "bias_field_correction": {
         "enabled": true,
         "saving_files": true,
-        "output_dir": "/home/juanqui55/git/mri_preprocessing/data/output",
+        "output_dir": "./data/output",
         "methods": {
             "sitk":{
                 "enabled": false,
@@ -132,7 +132,7 @@
     },
     "quality_control":{
         "enabled":true,
-        "qc_report_path": "/home/juanqui55/git/mri_preprocessing/data/output/qc_report.json",
+        "qc_report_path": "./data/output/qc_report.json",
         "expected_dims": [130, 256, 256],
         "expected_voxel_size": [1.0, 1.0, 1.0],
         "min_voxels": 10000,
@@ -142,10 +142,10 @@
         "min_contrast": 0.1
     },
     "registration":{
-        "enabled": true,
+        "enabled": false,
         "saving_files": true,
-        "output_dir": "/home/juanqui55/git/mri_preprocessing/data/output",
-        "reference": "/home/juanqui55/git/mri_preprocessing/data/registration_templates/temp_head.nii.gz",
+        "output_dir": "./data/output",
+        "reference": "./data/registration_templates/temp_head.nii.gz",
         "methods":{
             "spm":{
                 "enabled": false
@@ -164,10 +164,10 @@
         }
     },
     "resampling":{
-        "enabled": true,
+        "enabled": false,
         "saving_files": true,
-        "output_dir": "/home/juanqui55/git/mri_preprocessing/data/output",
-        "reference": "/home/juanqui55/git/mri_preprocessing/data/registration_templates/temp_head.nii.gz",
+        "output_dir": "./data/output",
+        "reference": "./data/registration_templates/temp_head.nii.gz",
         "methods":{
             "ants":{
                 "enabled": false,
@@ -201,7 +201,7 @@
             },
             "atlas": {
                 "enabled": false,
-                "path": "/path/to/your/atlas.nii"
+                "path": "./data/atlas/atlas.nii"
             }
         }
     },

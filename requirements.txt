@@ -36,7 +36,6 @@ cycler==0.12.0
 fonttools==4.43.0
 kiwisolver==1.4.5
 matplotlib==3.8.0
-mri-preprocessing @ file:///home/juanqui55/git/mri-preprocessing
 itk==5.3.0
 itk-core==5.3.0
 itk-filtering==5.3.0
@@ -50,3 +49,4 @@ pytz==2023.3.post1
 tzdata==2023.3
 dicom2nifti==2.4.8
 python-gdcm==3.0.22
+lapgm==0.1.0

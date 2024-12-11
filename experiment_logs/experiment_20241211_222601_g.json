@@ -1,0 +1,341 @@
+{
+    "experiment_name": "g",
+    "cohort_name": "g",
+    "notes": "g",
+    "mri_type": "fMRI",
+    "image_format": "NIFTI",
+    "image_dir": "/Users/xabieririzar/personal-projects/mri_preprocessing/data/input/example/MRHead.nrrd",
+    "experiment_id": "f2dede45-0a6c-4006-9f5f-669b76519579",
+    "timestamp": "2024-12-11T22:25:57.166200",
+    "selected_steps": [
+        "image_conversion",
+        "image_loading",
+        "image_saving",
+        "image_visualization",
+        "bias_field_correction",
+        "quality_control",
+        "registration",
+        "resampling"
+    ],
+    "config": {
+        "image_conversion": {
+            "enabled": true
+        },
+        "image_loading": {
+            "enabled": true,
+            "file_path": "./data/input/example/MRHead.csv",
+            "input_dir": "./data/input/example/",
+            "recursive": true
+        },
+        "image_saving": {
+            "enabled": true,
+            "input_dir": "./data/input/example/",
+            "output_dir": "./data/output/"
+        },
+        "image_visualization": {
+            "enabled": true,
+            "output_file": "./data/output/output_file.png"
+        },
+        "bias_field_correction": {
+            "enabled": true,
+            "saving_files": true,
+            "output_dir": "./data/output",
+            "methods": {
+                "sitk": {
+                    "enabled": false,
+                    "automatic": false,
+                    "n_iterations_level": [
+                        50,
+                        50,
+                        50,
+                        50
+                    ],
+                    "convergence_threshold": 0.001,
+                    "bf_fwhm": 0.15,
+                    "wiener_noise": 0.01,
+                    "histogram_bins": 200
+                },
+                "lapgm": {
+                    "enabled": true,
+                    "use_gpu": true,
+                    "normalize": true,
+                    "target_intensity": 1000.0,
+                    "tau": 1.0,
+                    "n_classes": 3,
+                    "alpha": 2.0
+                }
+            }
+        },
+        "binning": {
+            "enabled": false,
+            "methods": {
+                "fixed_width": {
+                    "enabled": false,
+                    "bin_width": 2
+                },
+                "quantile": {
+                    "enabled": false,
+                    "num_bins": 4
+                }
+            }
+        },
+        "denoising": {
+            "enabled": false,
+            "methods": {
+                "gaussian": {
+                    "enabled": true,
+                    "sigma_gaussian": "value1"
+                },
+                "nlm": {
+                    "enabled": false,
+                    "search_radius": 3,
+                    "patch_radius": 1
+                },
+                "tv": {
+                    "enabled": false,
+                    "weight": "value1",
+                    "channel_axis": null
+                },
+                "aniso_diffusion": {
+                    "enabled": false,
+                    "sigma_range": "value2",
+                    "sigma_spatial": "value3"
+                },
+                "wavelet": {
+                    "enabled": false,
+                    "wavelet": "db1",
+                    "sigma_wavelet": "value4"
+                },
+                "medfilt": {
+                    "enabled": true,
+                    "kernel_size": 3
+                }
+            }
+        },
+        "filtering": {
+            "enabled": false,
+            "methods": {
+                "gaussian": {
+                    "enabled": true,
+                    "sigma": 1
+                },
+                "median": {
+                    "enabled": false,
+                    "radius": 2
+                },
+                "bilateral": {
+                    "enabled": false,
+                    "domain_sigma": 1,
+                    "range_sigma": 2
+                },
+                "otsu": {
+                    "enabled": false
+                }
+            }
+        },
+        "motion_correction": {
+            "enabled": false,
+            "params": {
+                "reference_vol": null
+            }
+        },
+        "normalization": {
+            "enabled": false,
+            "methods": {
+                "intensity": {
+                    "enabled": true
+                },
+                "zscore": {
+                    "enabled": false
+                },
+                "histogram": {
+                    "enabled": false
+                }
+            }
+        },
+        "quality_control": {
+            "enabled": true,
+            "qc_report_path": "./data/output/qc_report.json",
+            "expected_dims": [
+                130,
+                256,
+                256
+            ],
+            "expected_voxel_size": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "min_voxels": 10000,
+            "max_aspect_ratio": 4.0,
+            "expected_orientation": [
+                "R",
+                "A",
+                "S"
+            ],
+            "min_snr": 5.0,
+            "min_contrast": 0.1
+        },
+        "registration": {
+            "enabled": true,
+            "saving_files": true,
+            "output_dir": "./data/output",
+            "reference": "./data/registration_templates/temp_head.nii.gz",
+            "methods": {
+                "spm": {
+                    "enabled": false
+                },
+                "itk": {
+                    "enabled": false
+                },
+                "fsl": {
+                    "enabled": false,
+                    "resolution": 1.0,
+                    "interp": "trilinear"
+                },
+                "sitk": {
+                    "enabled": true
+                }
+            }
+        },
+        "resampling": {
+            "enabled": true,
+            "saving_files": true,
+            "output_dir": "./data/output",
+            "reference": "./data/registration_templates/temp_head.nii.gz",
+            "methods": {
+                "ants": {
+                    "enabled": false,
+                    "spacing": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "smoothing": true
+                },
+                "scipy": {
+                    "enabled": false,
+                    "scale_factor": 3.0,
+                    "order": 0
+                },
+                "sitk": {
+                    "enabled": false,
+                    "spacing": [
+                        1,
+                        1,
+                        1
+                    ],
+                    "interpolation": "linear"
+                },
+                "itk": {
+                    "enabled": true
+                }
+            }
+        },
+        "skull_stripping": {
+            "enabled": false,
+            "methods": {
+                "threshold": {
+                    "enabled": true,
+                    "value": 100
+                },
+                "morphological": {
+                    "enabled": false
+                },
+                "atlas": {
+                    "enabled": false,
+                    "path": "./data/atlas/atlas.nii"
+                }
+            }
+        },
+        "slice_timing": {
+            "enabled": false,
+            "params": {
+                "num_slices": 4,
+                "tr": 2.0,
+                "ta": 1.9,
+                "slice_order": [
+                    1,
+                    3,
+                    5,
+                    2,
+                    4,
+                    6
+                ]
+            }
+        }
+    },
+    "parameters": {
+        "image_conversion": {},
+        "image_loading": {
+            "file_path": "./data/input/example/MRHead.csv",
+            "input_dir": "./data/input/example/",
+            "recursive": true
+        },
+        "image_saving": {
+            "input_dir": "./data/input/example/",
+            "output_dir": "./data/output/"
+        },
+        "image_visualization": {
+            "output_file": "./data/output/output_file.png"
+        },
+        "bias_field_correction": {
+            "methods": {
+                "sitk": {
+                    "enabled": false
+                },
+                "lapgm": {
+                    "enabled": true,
+                    "use_gpu": true,
+                    "normalize": true,
+                    "target_intensity": 1000.0,
+                    "tau": 1.0,
+                    "n_classes": 3,
+                    "alpha": 2.0
+                }
+            }
+        },
+        "quality_control": {
+            "qc_report_path": "./data/output/qc_report.json",
+            "expected_dims": "[130, 256, 256]",
+            "expected_voxel_size": "[1.0, 1.0, 1.0]",
+            "min_voxels": 10000,
+            "max_aspect_ratio": 4.0,
+            "expected_orientation": "['R', 'A', 'S']",
+            "min_snr": 5.0,
+            "min_contrast": 0.1
+        },
+        "registration": {
+            "methods": {
+                "spm": {
+                    "enabled": false
+                },
+                "itk": {
+                    "enabled": false
+                },
+                "fsl": {
+                    "enabled": false
+                },
+                "sitk": {
+                    "enabled": true
+                }
+            }
+        },
+        "resampling": {
+            "methods": {
+                "ants": {
+                    "enabled": false
+                },
+                "scipy": {
+                    "enabled": false
+                },
+                "sitk": {
+                    "enabled": false
+                },
+                "itk": {
+                    "enabled": true
+                }
+            }
+        }
+    }
+}
