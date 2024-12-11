@@ -75,7 +75,7 @@ class Pipeline:
             # add here motion correction 
             # add here slice timing correction
             "bias_field_correction": BiasFieldCorrection,
-            #"resampling": Resampling,
+            "resampling": Resampling,
             #"registration": Registration,
             #"skull_stripping": SkullStripping,
             #"denoising": Denoising,

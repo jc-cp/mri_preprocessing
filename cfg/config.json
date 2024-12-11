@@ -168,24 +168,28 @@
         "saving_files": true,
         "output_dir": "./data/output",
         "reference": "./data/registration_templates/temp_head.nii.gz",
+        "spacing": [1.0,1.0,1.0],
         "methods":{
             "ants":{
                 "enabled": false,
-                "spacing": [1.0, 1.0, 1.0],
-                "smoothing": true
+                "interpolation": "linear",
+                "dimension": 3
             },
             "scipy":{
                 "enabled": false,
-                "scale_factor": 3.0,
-                "order": 0
+                "order": 1,
+                "mode": "constant",
+                "preserve_range": true
             },
             "sitk":{
-                "enabled": false,
-                "spacing": [1, 1, 1],
+                "enabled": true,
                 "interpolation": "linear"
             },
             "itk":{
-                "enabled": true
+                "enabled": false,
+                "interpolation": "linear",
+                "transform_type": "scale",
+                "optimize_memory": true
             }
         }
     },
