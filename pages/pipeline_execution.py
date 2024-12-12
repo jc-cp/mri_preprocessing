@@ -68,7 +68,7 @@ def page_pipeline_execution():
                 )
 
                 try:
-                    pipeline = Pipeline(temp_config_path)
+                    pipeline = Pipeline(temp_config_path, streamlit_state=st.session_state)
                     pipeline.run()
 
                     st.session_state.terminal_output.append(

@@ -33,7 +33,7 @@ from src.utils.image_conversion import ImageConversion
 from src.utils.image_loading import ImageLoading
 from src.utils.image_saving import ImageSaving
 from src.utils.image_visualization import ImageVisualization
-
+import streamlit as st
 
 class Pipeline:
     """
@@ -54,7 +54,7 @@ class Pipeline:
         run(): Runs the preprocessing pipeline on the specified images.
     """
 
-    def __init__(self, config_file):
+    def __init__(self, config_file, streamlit_state=None):
         logging.basicConfig(
             filename="preprocessing.log",
             level=logging.INFO,
@@ -74,7 +74,7 @@ class Pipeline:
             "quality_control": QualityControl,
             # add here motion correction 
             # add here slice timing correction
-            #"bias_field_correction": BiasFieldCorrection,
+            "bias_field_correction": BiasFieldCorrection,
             "resampling": Resampling,
             "registration": Registration,
             #"skull_stripping": SkullStripping,
@@ -91,18 +91,39 @@ class Pipeline:
         self.image_saving = ImageSaving(self.config["image_saving"])
         self.image_visualization = ImageVisualization(self.config["image_visualization"])
 
+        self.streamlit_state = streamlit_state
+
     def run(self):
         """
         Runs the preprocessing pipeline on the specified images one-by-one.
 
+        Args:
+            streamlit_state: Optional StreamlitSessionState to update progress
+
         Raises:
             ExceptionGroup: If any exception occurs during pipeline execution.
         """
-
         try:
+            total_images = len(list(self.image_loading.run()))  # Get total number of images
+            current_image = 0
+            
+            if self.streamlit_state is not None:
+                self.streamlit_state.total_images = total_images
+                self.streamlit_state.current_image = current_image
+                self.streamlit_state.current_step = "Starting pipeline..."
+                self.streamlit_state.progress = 0.0
+
             for image, path in self.image_loading.run():
+                current_image += 1
+                if self.streamlit_state is not None:
+                    self.streamlit_state.current_image = current_image
+                    self.streamlit_state.current_step = f"Processing image {current_image}/{total_images}"
+                    self.streamlit_state.progress = current_image / total_images
+
                 # Do conversion to Nifti if needed
                 if self.config["image_conversion"]["enabled"]:
+                    if self.streamlit_state is not None:
+                        self.streamlit_state.current_step = "Converting to NIfTI..."
                     image = self.image_conversion.run(path)
 
                 # Save initial image and template for later visualization
@@ -110,13 +131,15 @@ class Pipeline:
                 print(f"Initial image has shape: {initial_image.shape}")
 
                 # Apply preprocessing steps
-                (
-                    processed_data_by_step,
-                    applied_steps,
-                ) = self.apply_steps(image, path)
+                processed_data_by_step, applied_steps = self.apply_steps(
+                    image, 
+                    path, 
+                )
 
                 self.image_saving.run(image, path)
                 if self.config["image_visualization"]["enabled"]:
+                    if self.streamlit_state is not None:
+                        self.streamlit_state.current_step = "Generating visualizations..."
                     template_image = self.config["registration"]["reference"]
                     self.image_visualization.run(
                         initial_image,
@@ -125,7 +148,13 @@ class Pipeline:
                         applied_steps,
                     )
 
+            if self.streamlit_state is not None:
+                self.streamlit_state.current_step = "Pipeline completed!"
+                self.streamlit_state.progress = 1.0
+
         except Exception as error:
+            if self.streamlit_state is not None:
+                self.streamlit_state.current_step = f"Error: {str(error)}"
             print(f"Error running pipeline: {error}")
 
     def apply_steps(self, image, image_path):
@@ -135,21 +164,29 @@ class Pipeline:
         Args:
             image: A medical image to process.
             image_path: A file path corresponding to the medical image.
+            streamlit_state: Optional StreamlitSessionState to update progress
 
         Returns:
             A tuple of lists containing the original and processed medical image,
             and a list of applied processing steps.
-
-        Raises:
-            ValueError: If `enabled` is not specified in the configuration.
-            ValueError: If an error occurs during processing.
         """
         processed_data_by_step = []
         applied_steps = []
 
+        total_steps = len([step for step, config in self.config.items() 
+                          if isinstance(config, dict) and config.get('enabled', False)])
+        current_step = 0
+
         for step_name, step_class in self.step_classes.items():
             if self.config[step_name]["enabled"]:
                 try:
+                    current_step += 1
+                    if self.streamlit_state is not None:
+                        self.streamlit_state.current_step = f"Applying {step_name}..."
+                        self.streamlit_state.current_substep = current_step
+                        self.streamlit_state.total_substeps = total_steps
+                        self.streamlit_state.substep_progress = current_step / total_steps
+
                     step_instance = step_class(self.config[step_name])
                     print(f"Starting with pre-processing step: {step_name}")
 
@@ -163,5 +200,7 @@ class Pipeline:
                     print(f"Successfully applied {step_name}.")
                 except (ValueError, IOError) as error:
                     print(f"Error applying {step_name}, with error {error}.")
+                    if self.streamlit_state is not None:
+                        self.streamlit_state.current_step = f"Error in {step_name}: {str(error)}"
 
         return processed_data_by_step, applied_steps
