@@ -61,12 +61,13 @@ class Registration:
         """
         saving_images = self.config["saving_files"]
         output_dir = self.config["output_dir"]
+        template = self.config["reference"]
 
         for method_name in self.config["methods"]:
             if self.config["methods"][method_name]["enabled"]:
                 func = self.methods.get(method_name, None)
                 if func:
-                    image = func(image, image_path)
+                    image = func(image, template)
                 if saving_images:
                     new_dir, img_id = prepare_output_directory(output_dir, image_path)
                     filename = os.path.join(new_dir, f"{img_id}_{method_name}_registered.nii.gz")
@@ -130,148 +131,174 @@ class Registration:
             image_registered = hf.itk_to_nib(image_registered)
             return image_registered
 
-        except ExceptionGroup:
+        except Exception as e:
             print("Cannot transform", image_path.split("/")[-1])
+            raise Exception(f"Error in ITK registration: {str(e)}")
 
-    def spm_registration(self, image, path):
+    def spm_registration(self, image: nib.Nifti1Image, template: str) -> nib.Nifti1Image:
         """
-        Registers an image to a template image using the SPM registration method.
-
+        Register image using SPM's Normalize12.
+        
         Args:
-            image: The image to register.
-            template_path (str): The path to the template image.
-
+            image: Input image to register
+            template: Path to template image
+        
         Returns:
-            The registered image.
+            Registered image as Nifti1Image
         """
-        # Ensure the image file exists
-        if not os.path.exists(path):
-            raise FileNotFoundError(f"No file found at {path}")
-
-        template = self.config["methods"]["spm"]["template"]
-
-        nii_path = convert_nii_gz_to_nii(path)
-        deformation_file_path = self.spm_segmentation(image, path)
-
-        # Define the SPM Normalize12 instance for registration
-        norm12 = spm.Normalize12(
-            jobtype="estwrite",
-            tpm=template,
-            apply_to_files=[nii_path],
-            deformation_file=deformation_file_path,
-        )
-
         try:
-            result = norm12.run()
-            print("type registration result:", type(result))
+            spm_config = self.config["methods"]["spm"]
+            
+            # Save input image temporarily if it's in memory
+            if isinstance(image, nib.Nifti1Image):
+                temp_input = os.path.join(self.config["output_dir"], "temp_input.nii")
+                nib.save(image, temp_input)
+                input_path = temp_input
+            else:
+                input_path = image
 
-        except ExceptionGroup as error:
-            print(f"SPM Normalize12 failed with error: {error}")
-
-        return result.outputs
-
-    def spm_segmentation(self, image, path):
-        # Define the segmentation instance
-        segmentation = spm.NewSegment()
-
-        # Set input file
-        segmentation.inputs.channel_files = path
-
-        # Run segmentation
-        try:
-            seg_result = segmentation.run()
+            # First run segmentation to get deformation field
+            segment = spm.NewSegment()
+            segment.inputs.channel_files = input_path
+            segment.inputs.channel_info = (0.0001, 60, (True, True))
+            segment.inputs.sampling_distance = spm_config["sampling_distance"]
+            segment.inputs.write_deformation_fields = [True, True]
+            
+            print("Running SPM segmentation...")
+            segment_result = segment.run()
+            
+            # Then run normalization using the deformation field
+            normalize = spm.Normalize12()
+            normalize.inputs.image_to_align = input_path
+            normalize.inputs.deformation_file = segment_result.outputs.forward_deformation_field
+            normalize.inputs.jobtype = spm_config["jobtype"]
+            normalize.inputs.write_wrapped = spm_config["write_wrapped"]
+            normalize.inputs.write_voxel_sizes = self.config["spacing"]
+            normalize.inputs.template = self.config["reference"]
+            normalize.inputs.interpolation = spm_config["interpolation"]
+            
+            print("Running SPM normalization...")
+            normalize_result = normalize.run()
+            
+            # Load and return the normalized image
+            registered_image = nib.load(normalize_result.outputs.normalized_files)
+            
+            # Cleanup temporary files
+            if isinstance(image, nib.Nifti1Image):
+                os.remove(temp_input)
+                
+            return registered_image
+            
         except Exception as e:
-            raise RuntimeError(f"SPM NewSegment failed with error: {e}")
+            raise Exception(f"Error in SPM registration: {str(e)}")
 
-        # Cleanup segmentation results
-        self.cleanup_segmentation_results(path)
-
-        # Return the forward deformation file path
-        return seg_result.outputs
-
-    def cleanup_segmentation_results(self, path):
-        dir_path = os.path.dirname(path)
-        files = glob.glob(os.path.join(dir_path, "c*.nii"))
-        for file in files:
-            try:
-                os.remove(file)
-            except OSError as e:
-                print(f"Error in file: {file} with error: {e.strerror}")
-
-    def fsl_registration(self, image, path: str):
-        # Ensure the image file exists
-        if not os.path.exists(path):
-            raise FileNotFoundError(f"No file found at {path}")
-
-        # Define the FLIRT instance for resampling
-        flirt = FLIRT(
-            in_file=image,
-            reference=self.config["methods"]["fsl"]["reference"],
-            apply_isoxfm=self.config["methods"]["fsl"]["resolution"],
-            interp=self.config["methods"]["fsl"]["interp"],
-        )
-        try:
-            result = flirt.run()
-        except Exception as e:
-            raise RuntimeError(f"FSL FLIRT failed with error: {e}")
-
-        return result.outputs
-
-    def sitk_registration(
-        self, resampled_fixed_img: nib.Nifti1Image, img_path: str
-    ) -> nib.Nifti1Image:
-        """Register the moving image to the fixed image using SimpleITK.
-        This method takes into account a resampled template image for registration
-        and the extracts the moving image from the image path.
+    def fsl_registration(self, image: nib.Nifti1Image, template: str) -> nib.Nifti1Image:
         """
-        resampled_fixed_img = nib_to_sitk(resampled_fixed_img)
+        Register image using FSL FLIRT.
+        
+        Args:
+            image: Input image to register
+            template: Path to template image
+        
+        Returns:
+            Registered image as Nifti1Image
+        """
+        try:
+            from nipype.interfaces import fsl
+            fsl_config = self.config["methods"]["fsl"]
+            
+            # Save input image temporarily if it's in memory
+            if isinstance(image, nib.Nifti1Image):
+                temp_input = os.path.join(self.config["output_dir"], "temp_input.nii.gz")
+                nib.save(image, temp_input)
+                input_path = temp_input
+            else:
+                input_path = image
 
-        if "nii" in img_path:
-            try:
-                moving_img = nib.load(img_path)
-                moving_img = nib.as_closest_canonical(moving_img)
-                moving_img = nib_to_sitk(moving_img)
+            # Configure FLIRT
+            flirt = fsl.FLIRT()
+            flirt.inputs.in_file = input_path
+            flirt.inputs.reference = template
+            flirt.inputs.dof = fsl_config["dof"]
+            flirt.inputs.cost = fsl_config["cost_function"]
+            flirt.inputs.interp = fsl_config["interp"]
+            flirt.inputs.searchr_x = fsl_config["search_angles"]
+            flirt.inputs.searchr_y = fsl_config["search_angles"]
+            flirt.inputs.searchr_z = fsl_config["search_angles"]
+            flirt.inputs.bins = fsl_config["bins"]
+            flirt.inputs.init = fsl_config["init"]
+            
+            print("Running FSL registration...")
+            flirt_result = flirt.run()
+            
+            # Load and return the registered image
+            registered_image = nib.load(flirt_result.outputs.out_file)
+            
+            # Cleanup temporary files
+            if isinstance(image, nib.Nifti1Image):
+                os.remove(temp_input)
+                
+            return registered_image
+            
+        except Exception as e:
+            raise Exception(f"Error in FSL registration: {str(e)}")
 
-                transform = sitk.CenteredTransformInitializer(
-                    resampled_fixed_img,
-                    moving_img,
-                    sitk.Euler3DTransform(),
-                    sitk.CenteredTransformInitializerFilter.GEOMETRY,
-                )
-                # multi-resolution rigid registration using Mutual Information
-                registration_method = sitk.ImageRegistrationMethod()
-                registration_method.SetMetricAsMattesMutualInformation(numberOfHistogramBins=50)
-                registration_method.SetMetricSamplingStrategy(registration_method.RANDOM)
-                registration_method.SetMetricSamplingPercentage(0.01)
-                registration_method.SetInterpolator(sitk.sitkLinear)
-                registration_method.SetOptimizerAsGradientDescent(
-                    learningRate=1.0,
-                    numberOfIterations=100,
-                    convergenceMinimumValue=1e-6,
-                    convergenceWindowSize=10,
-                )
-                registration_method.SetOptimizerScalesFromPhysicalShift()
-                registration_method.SetShrinkFactorsPerLevel(shrinkFactors=[4, 2, 1])
-                registration_method.SetSmoothingSigmasPerLevel(smoothingSigmas=[2, 1, 0])
+    def sitk_registration(self, image: nib.Nifti1Image, template: str) -> nib.Nifti1Image:
+        """Register the moving image to the fixed image using SimpleITK."""
+        sitk_config = self.config["methods"]["sitk"]
+        template_nib = nib.load(template)
+        template_sitk = nib_to_sitk(template_nib)
+        try:
+            moving_img = nib.as_closest_canonical(image)
+            moving_img = nib_to_sitk(moving_img)
+
+            transform = sitk.CenteredTransformInitializer(
+                template_sitk,
+                moving_img,
+                sitk.Euler3DTransform(),
+                sitk.CenteredTransformInitializerFilter.GEOMETRY,
+            )
+            
+            registration_method = sitk.ImageRegistrationMethod()
+            registration_method.SetMetricAsMattesMutualInformation(
+                numberOfHistogramBins=sitk_config["histogram_bins"]
+            )
+            registration_method.SetMetricSamplingStrategy(registration_method.RANDOM)
+            registration_method.SetMetricSamplingPercentage(
+                sitk_config["metric_sampling_percentage"]
+            )
+            registration_method.SetInterpolator(sitk.sitkLinear)
+            registration_method.SetOptimizerAsGradientDescent(
+                learningRate=sitk_config["learning_rate"],
+                numberOfIterations=sitk_config["number_of_iterations"],
+                convergenceMinimumValue=sitk_config["convergence_minimum_value"],
+                convergenceWindowSize=sitk_config["convergence_window_size"],
+            )
+            registration_method.SetOptimizerScalesFromPhysicalShift()
+            registration_method.SetShrinkFactorsPerLevel(
+                shrinkFactors=sitk_config["shrink_factors"]
+            )
+            registration_method.SetSmoothingSigmasPerLevel(
+                smoothingSigmas=sitk_config["smoothing_sigmas"]
+            )
+            if sitk_config["smoothing_sigmas_in_physical_units"]:
                 registration_method.SmoothingSigmasAreSpecifiedInPhysicalUnitsOn()
-                registration_method.SetInitialTransform(transform)
-                print("Sitk registration ongoing...")
-                final_transform = registration_method.Execute(resampled_fixed_img, moving_img)
+            registration_method.SetInitialTransform(transform)
+            
+            print("Sitk registration ongoing...")
+            final_transform = registration_method.Execute(template_sitk, moving_img)
 
-                registered_image = sitk.Resample(
-                    moving_img,
-                    resampled_fixed_img,
-                    final_transform,
-                    sitk.sitkLinear,
-                    0.0,
-                    moving_img.GetPixelID(),
-                )
+            registered_image = sitk.Resample(
+                moving_img,
+                template_sitk,
+                final_transform,
+                sitk.sitkLinear,
+                0.0,
+                moving_img.GetPixelID(),
+            )
 
-                registered_image = sitk_to_nib(registered_image)
-                print("Sitk registration finished...")
-                return registered_image
-            except (FileNotFoundError, IOError, RuntimeError) as error:
-                print(f"Cannot transform {img_path}, with error {error}.")
-
-        else:
-            raise FileNotFoundError("File has not .nii suffix on it!")
+            registered_image = sitk_to_nib(registered_image)
+            print("Sitk registration finished...")
+            return registered_image
+        except Exception as e:
+            raise Exception(f"Error in SimpleITK registration: {str(e)}")
