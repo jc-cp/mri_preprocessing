@@ -133,16 +133,33 @@
         }
     },
     "normalization": {
-        "enabled": false,
+        "enabled": true,
+        "saving_files": true,
+        "output_dir": "./data/output",
         "methods": {
             "intensity": {        
-                "enabled": true
+                "enabled": false,
+                "min_value": 0.0,
+                "max_value": 1.0,
+                "percentiles": [2, 98]
             },
             "zscore": {
-                "enabled": false
+                "enabled": false,
+                "robust": false
             },
             "histogram": {
-                "enabled": false
+                "enabled": false,
+                "n_bins": 256,
+                "normalize": true
+            },
+            "whitening": {
+                "enabled": false,
+                "epsilon": 1e-8
+            },
+            "min_max": {
+                "enabled": true,
+                "min_value": 0.0,
+                "max_value": 1.0
             }
         }
     },
