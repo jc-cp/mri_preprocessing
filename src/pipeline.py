@@ -74,11 +74,11 @@ class Pipeline:
             "quality_control": QualityControl,
             # add here motion correction 
             # add here slice timing correction
-            #"bias_field_correction": BiasFieldCorrection,
+            "bias_field_correction": BiasFieldCorrection,
             "resampling": Resampling,
             "registration": Registration,
             #"skull_stripping": SkullStripping,
-            #"denoising": Denoising,
+            "denoising": Denoising,
             #"normalization": Normalization,
             #"filtering": Filtering,
             #"binning": Binning
