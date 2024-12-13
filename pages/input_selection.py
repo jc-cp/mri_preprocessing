@@ -46,27 +46,34 @@ def page_input_selection():
         "Select Image Format",
         ["DICOM", "NRRD", "NIFTI"],
         index=["DICOM", "NRRD", "NIFTI"].index(
-            st.session_state.experiment_data.get("image_format", "DICOM")
+            st.session_state.experiment_data.get("image_format", "NIFTI")
         ),
         key="img_format",
     )
 
     # Directory selection using a file uploader
     st.subheader("Directory Selection")
-    st.text("Upload a dummy file from the desired directory to select it.")
-    uploaded_file = st.file_uploader(
-        "Choose a file from the directory", 
+    st.text("Select the images you want to process.")
+    uploaded_files = st.file_uploader(
+        "Choose multiple files", 
         type=None, 
-        key="file_upload"
+        key="file_upload",
+        accept_multiple_files=True,
     )
-
-    if uploaded_file is not None:
-        # Extract the directory path from the uploaded file
-        image_dir = Path(os.getcwd()) / "data/input/example" / uploaded_file.name
+    if len(uploaded_files) > 0:
+        for root, dirs, files in os.walk(Path(os.getcwd())):
+            if uploaded_files[0].name in files:
+                image_dir = Path(root)
+                break
         st.success(f"Selected directory: {image_dir}")
         st.session_state.img_dir = str(image_dir)
     else:
         image_dir = st.session_state.get("img_dir", "")
+    
+    if image_dir:
+        file_paths = [image_dir / path for path in sorted(os.listdir(image_dir))]
+    
+
 
     # Store the selections in session state
     if st.button("Next", key="next_button"):
@@ -82,7 +89,9 @@ def page_input_selection():
                 "notes": notes,
                 "mri_type": mri_type,
                 "image_format": image_format,
-                "image_dir": image_dir,
+                "image_paths": file_paths,
+                "image_count": len(file_paths),
+                "loaded_dir": image_dir,
                 "experiment_id": st.session_state.experiment_data.get(
                     "experiment_id", str(uuid.uuid4())
                 ),

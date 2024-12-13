@@ -1,4 +1,5 @@
 """Visualization methods for comparing plots."""
+
 import matplotlib.pyplot as plt
 import nibabel as nib
 

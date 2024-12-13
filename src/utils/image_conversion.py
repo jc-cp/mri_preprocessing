@@ -78,7 +78,7 @@ class ImageConversion:
             signs = np.sign([space_directions[i, primary_directions[i]] for i in range(3)])
             
             # First transpose to match NIFTI dimension order
-            data = np.transpose(data, (2, 1, 0))
+            data = np.transpose(data, (2, 0, 1))
             
             # Flip axes where needed to match RAS+ orientation
             for i in range(3):
@@ -86,7 +86,7 @@ class ImageConversion:
                     data = np.flip(data, axis=i)
         else:
             # If no space directions, just transpose to match NIFTI convention
-            data = np.transpose(data, (2, 1, 0))
+            data = np.transpose(data, (2, 0, 1))
         
         # Create affine matrix
         spacing = header.get('spacing', (1.0, 1.0, 1.0))

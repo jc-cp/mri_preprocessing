@@ -1,25 +1,30 @@
 {   
     "image_conversion":{
-        "enabled": true
+        "enabled": true,
+        "display_step": false
     },    
     "image_loading":{
         "enabled": true,
-        "file_path": "./data/input/example/MRHead.csv",
+        "file_paths": ["./data/input/example/MRHead.csv"],
         "input_dir": "./data/input/example/",
-        "recursive": true
+        "recursive": true,
+        "display_step": false
     },
     "image_saving":{
         "enabled": true,
+        "display_step": false,
         "input_dir": "./data/input/example/",
         "output_dir": "./data/output/"
     },
     "image_visualization":{
         "enabled": true,
+        "display_step": false,
         "output_file": "./data/output/output_file.png"
     },
     "bias_field_correction": {
         "enabled": true,
         "saving_files": true,
+        "display_step": true,
         "output_dir": "./data/output",
         "methods": {
             "sitk":{
@@ -44,6 +49,7 @@
     },
     "binning":{
         "enabled": false,
+        "display_step": true,
         "methods":{
             "fixed_width":{
                 "enabled":false,
@@ -57,6 +63,7 @@
     },
     "denoising": {
         "enabled": true,
+        "display_step": true,
         "saving_files": true,
         "output_dir": "./data/output",
         "methods": {
@@ -107,6 +114,7 @@
     },
     "filtering":{
         "enabled": false,
+        "display_step": true,
         "methods":{
             "gaussian": {
                 "enabled": true,
@@ -128,12 +136,14 @@
     },
     "motion_correction":{
         "enabled": false,
+        "display_step": true,
         "params":{
-        "reference_vol": null 
+            "reference_vol": null 
         }
     },
     "normalization": {
         "enabled": true,
+        "display_step": true,
         "saving_files": true,
         "output_dir": "./data/output",
         "methods": {
@@ -165,6 +175,7 @@
     },
     "quality_control":{
         "enabled":true,
+        "display_step": true,
         "qc_report_path": "./data/output/qc_report.json",
         "expected_dims": [130, 256, 256],
         "expected_voxel_size": [1.0, 1.0, 1.0],
@@ -176,6 +187,7 @@
     },
     "registration":{
         "enabled": true,
+        "display_step": true,
         "saving_files": true,
         "output_dir": "./data/output",
         "reference": "./data/registration_templates/temp_head.nii.gz",
@@ -221,6 +233,7 @@
     },
     "resampling":{
         "enabled": true,
+        "display_step": true,
         "saving_files": true,
         "output_dir": "./data/output",
         "reference": "./data/registration_templates/temp_head.nii.gz",
@@ -251,6 +264,7 @@
     },
     "skull_stripping": {
         "enabled": false,
+        "display_step": true,
         "methods": {
             "threshold": {
                 "enabled": true,
@@ -267,11 +281,12 @@
     },
     "slice_timing":{
         "enabled": false,
+        "display_step": true,
         "params":{
-        "num_slices": 4,
-        "tr": 2.0, 
-        "ta": 1.9, 
-        "slice_order": [1, 3, 5, 2, 4, 6]
+            "num_slices": 4,
+            "tr": 2.0, 
+            "ta": 1.9, 
+            "slice_order": [1, 3, 5, 2, 4, 6]
         }
     }
 }

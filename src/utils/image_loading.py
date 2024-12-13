@@ -1,6 +1,7 @@
 """
 A module for loading medical images from DICOM, NIFTI, or NRRD files.
 """
+
 import os
 
 import nibabel as nib
@@ -17,38 +18,41 @@ class ImageLoading:
     """
 
     def __init__(self, config: dict):
-        self.file_path = config.get("file_path", None)
+        self.file_paths = config.get("file_paths", None)
         self.recursive = config.get("recursive", False)
         self.paths = config.get("input_dir", None)
 
     def run(self):
         """Main function to load the files."""
         image_paths = self.get_image_paths()
+
         for image_path in image_paths:
             try:
-                ext = image_path.split('.')[-1].lower() if '.' in image_path else ''
-                
-                if ext == 'dcm' or image_path.lower().endswith('.dcm'):
+                ext = image_path.split(".")[-1].lower() if "." in image_path else ""
+
+                if ext == "dcm" or image_path.lower().endswith(".dcm"):
                     print("Loading images of type: DICOM.")
                     with open(image_path, "rb") as file:
                         bytesio_obj = DicomBytesIO(file.read())
                         image = dcmread(bytesio_obj)
-                elif ext in ['nii', 'gz']:
+                elif ext in ["nii", "gz"]:
                     print("Loading images of type: NIFTI.")
                     image = nib.load(image_path)
-                elif ext == 'nrrd':
+                elif ext == "nrrd":
                     print("Loading images of type: NRRD.")
                     data, header = nrrd.read(image_path)
+
                     # Simple wrapper class to maintain consistent interface
                     class NRRDImage:
                         def __init__(self, data, header):
                             self.data = data
                             self.header = header
                             self.shape = data.shape
+
                     image = NRRDImage(data, header)
                 else:
                     raise ValueError(f"Unsupported file extension in file {image_path}")
-                
+
                 yield image, image_path
             except (IOError, RuntimeError, FileNotFoundError) as error:
                 print(f"Error loading image from {image_path}: {str(error)}")
@@ -66,16 +70,20 @@ class ImageLoading:
         If no valid image path or file with image paths is provided, the method raises a ValueError.
 
         Yields:
-            A path to a medical image file.
+            str: A path to a medical image file.
 
         Raises:
             ValueError: If no valid image path or file with image paths is provided.
             FileNotFoundError: If no file or directory is found at a specified path.
         """
-        if self.file_path and self.file_path.lower().endswith(".csv"):
-            d_f = pd.read_csv(self.file_path)
-            for image_path in d_f["image_path"].tolist():
-                yield image_path
+        if self.file_paths:
+            for file_path in self.file_paths:
+                if file_path.endswith(".csv"):
+                    d_f = pd.read_csv(file_path)
+                    for image_path in d_f["image_path"].tolist():
+                        yield image_path
+                else:
+                    yield file_path
         elif self.paths:
             for path in self.paths:
                 if os.path.isdir(path):

@@ -33,6 +33,8 @@ def page_pipeline_selection():
         st.session_state.selected_steps = selected_steps
         st.session_state.experiment_data["selected_steps"] = selected_steps
         st.session_state.experiment_data["config"] = st.session_state.config.copy()
+        st.session_state.experiment_data["config"]["image_loading"]["file_paths"] = st.session_state.experiment_data["image_paths"]
+        st.session_state.experiment_data["config"]["image_loading"]["input_dir"] = st.session_state.experiment_data["image_paths"][0].parent
         st.session_state.current_page = "parameter_configuration"
         st.rerun()
 

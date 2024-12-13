@@ -32,12 +32,14 @@ def create_sidebar():
         st.markdown("---")
         if "experiment_data" in st.session_state:
             st.markdown("**Current Experiment:**")
-            st.markdown(f"Name: {st.session_state.experiment_data.get('experiment_name', '')}")
-            st.markdown(f"Type: {st.session_state.experiment_data.get('mri_type', '')}")
-            st.markdown(f"Cohort: {st.session_state.experiment_data.get('cohort_name', '')}")
+            st.markdown(f"**Name:** {st.session_state.experiment_data.get('experiment_name', '')}")
+            st.markdown(f"**Type:** {st.session_state.experiment_data.get('mri_type', '')}")
+            st.markdown(f"**Cohort:** {st.session_state.experiment_data.get('cohort_name', '')}")
             st.markdown(f"Notes: {st.session_state.experiment_data.get('notes', '')}")
-            st.markdown(f"MRI Type: {st.session_state.experiment_data.get('mri_type', '')}")
+            st.markdown(f"**MRI Type:** {st.session_state.experiment_data.get('mri_type', '')}")
             st.markdown(f"Image Format: {st.session_state.experiment_data.get('image_format', '')}")
+            st.markdown(f"Image Count: {st.session_state.experiment_data.get('image_count', '')}")
+            st.markdown(f"Loaded Directory: {st.session_state.experiment_data.get('loaded_dir', '')}")
 
 def main():
     # Set wide mode before anything else

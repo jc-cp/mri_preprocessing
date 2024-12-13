@@ -110,6 +110,8 @@ def page_parameter_configuration():
     parameters = {}
 
     for step in selected_steps:
+        if not st.session_state.config[step]["display_step"]:
+            continue
         with st.expander(f"{step.replace('_', ' ').title()}", expanded=False):
             step_config = st.session_state.config[step]
             
