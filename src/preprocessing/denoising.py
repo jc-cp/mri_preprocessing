@@ -2,14 +2,12 @@ from skimage.restoration import denoise_nl_means, denoise_tv_chambolle, denoise_
 from skimage.filters import gaussian
 import numpy as np
 from scipy.signal import medfilt
-import nibabel as nib
-import os
-from src.utils.helper_functions import prepare_output_directory
+from src.preprocessing.base_processor import BaseProcessor
 
 
-class Denoising:
+class Denoising(BaseProcessor):
     def __init__(self, config: dict):
-        self.config = config
+        super().__init__(config)
         self.methods = {
             "gaussian": self.gaussian_denoising,
             "nlm": self.nlm_denoising,
@@ -25,26 +23,7 @@ class Denoising:
         Expects a nibabel image object or numpy array
         Returns denoised image data
         """
-        saving_images = self.config["saving_files"]
-        output_dir = self.config["output_dir"]  
-        # Convert nibabel image to numpy array if needed
-        if isinstance(image, nib.Nifti1Image):
-            image_data = image.get_fdata()
-        else:
-            image_data = image
-
-        # Apply enabled denoising methods
-        for method_name, method in self.methods.items():
-            if self.config['methods'][method_name]['enabled']:
-                func = self.methods.get(method_name, None)
-                if func:
-                    image_data = func(image_data, self.config['methods'][method_name])
-                if saving_images:
-                    new_dir, img_id = prepare_output_directory(output_dir, image_path)
-                    filename = os.path.join(new_dir, f"{img_id}_{method_name}_denoised.nii.gz")
-                    nib.save(image, filename)
-        
-        return nib.Nifti1Image(image_data, image.affine, image.header)
+        return self.run_methods(image, image_path, suffix="denoised", apply_to_data=True)
 
     def gaussian_denoising(self, image, config):
         sigma = config.get('sigma_gaussian', 1)

@@ -1,12 +1,11 @@
 import numpy as np
-import nibabel as nib
 from skimage import exposure
-import os
-from src.utils.helper_functions import prepare_output_directory
+from src.preprocessing.base_processor import BaseProcessor
 
-class Normalization:
+
+class Normalization(BaseProcessor):
     def __init__(self, config: dict):
-        self.config = config
+        super().__init__(config)
         self.methods = {
             "intensity": self.intensity_normalization,
             "zscore": self.zscore_normalization,
@@ -19,24 +18,7 @@ class Normalization:
         """
         Apply enabled normalization methods to the image
         """
-        saving_images = self.config["saving_files"]
-        output_dir = self.config["output_dir"]
-
-        if isinstance(image, nib.Nifti1Image):
-            image_data = image.get_fdata()
-        else:
-            image_data = image
-
-        # Apply enabled normalization methods
-        for method_name, method in self.methods.items():
-            if self.config['methods'][method_name]['enabled']:
-                image_data = method(image_data, self.config['methods'][method_name])
-                if saving_images:
-                    new_dir, img_id = prepare_output_directory(output_dir, image_path)
-                    filename = os.path.join(new_dir, f"{img_id}_{method_name}_normalized.nii.gz")
-                    nib.save(nib.Nifti1Image(image_data, image.affine, image.header), filename)
-
-        return nib.Nifti1Image(image_data, image.affine, image.header)
+        return self.run_methods(image, image_path, suffix="normalized", apply_to_data=True)
 
     def intensity_normalization(self, image, config):
         """
@@ -104,8 +86,8 @@ class Normalization:
             for i in range(image.shape[0]):
                 whitened[i] = self._whiten_2d(image[i], epsilon)
             return whitened
-        else:
-            return self._whiten_2d(image, epsilon)
+        
+        return self._whiten_2d(image, epsilon)
 
     def _whiten_2d(self, image_2d, epsilon):
         """
