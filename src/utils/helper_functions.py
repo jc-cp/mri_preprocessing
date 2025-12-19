@@ -9,12 +9,12 @@ import SimpleITK as sitk
 
 def sitk_to_nib(sitk_image):
     """Conversion from SimpleITK to Nibabel preserving spatial information.
-    
-    The affine matrix encodes both the direction (orientation) and spacing 
+
+    The affine matrix encodes both the direction (orientation) and spacing
     of the image in physical space. The proper construction is:
     affine[:3, :3] = direction @ diag(spacing)
-    
-    This ensures that when nibabel computes get_zooms() (by taking the L2 norm 
+
+    This ensures that when nibabel computes get_zooms() (by taking the L2 norm
     of each column), it correctly retrieves the spacing values.
     """
     np_image = sitk.GetArrayFromImage(sitk_image)

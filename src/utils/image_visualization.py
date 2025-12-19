@@ -59,15 +59,17 @@ class ImageVisualization:
         plt.savefig(self.output_file)
 
     def _get_slice(self, image):
+        """Get a middle slice from the image."""
         z_midpoint = image.shape[2] // 2
         if isinstance(image, nib.nifti1.Nifti1Image):
             return image.get_fdata()[:, :, z_midpoint]
-        else:
-            try:
-                nib_image = sitk_to_nib(image)
-                return nib_image.get_fdata()[:, :, z_midpoint]
-            except TypeError:
-                print(
-                    "Unsupported image type. Currently only nibabel.nifti1.Nifti1Image"
-                    "and Sikt conversion is supported."
-                )
+
+        try:
+            nib_image = sitk_to_nib(image)
+            return nib_image.get_fdata()[:, :, z_midpoint]
+        except TypeError:
+            print(
+                "Unsupported image type. Currently only nibabel.nifti1.Nifti1Image"
+                "and Sikt conversion is supported."
+            )
+            return None

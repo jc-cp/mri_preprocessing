@@ -1,8 +1,12 @@
+"""Module for binning intensity values in medical images."""
 import numpy as np
 
 
+
 class Binning:
+    """Class for binning image intensities."""
     def __init__(self, config: dict):
+        """Initialize binning processor."""
         self.config = config
 
     def run(self, image):

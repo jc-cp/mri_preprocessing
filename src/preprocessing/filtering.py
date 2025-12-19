@@ -1,8 +1,10 @@
+"""Module for filtering medical images."""
 import SimpleITK as sitk
 from skimage import filters
 
 
 class Filtering:
+    """Class for filtering medical images."""
     def __init__(self, config: dict):
         self.config = config
 
@@ -36,11 +38,11 @@ class Filtering:
         bilateral_filter.SetDomainSigma(domainSigma)
         bilateral_filter.SetRangeSigma(rangeSigma)
         return bilateral_filter.Execute(image)
-    
+
     def otsu_filtering(self, image):
         # Compute the threshold value with Otsu's method
         thresh = filters.threshold_otsu(image)
-        
+
         # Apply the threshold to the image: all pixels with intensities above the threshold are set to 1, the others to 0
         binary = image > thresh
 

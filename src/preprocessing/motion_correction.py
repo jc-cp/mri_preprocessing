@@ -1,8 +1,10 @@
+"""Module for motion correction in medical images."""
 from nipype.interfaces import fsl
 import os
 
 
 class MotionCorrection:
+    """Class for motion correction in medical images."""
     def __init__(self, config: dict):
         self.config = config
 
@@ -19,12 +21,12 @@ class MotionCorrection:
 
         # Define the MCFLIRT motion correction instance
         mcflt = fsl.MCFLIRT(in_file=image, cost='mutualinfo')
-        
+
         try:
-            mcflt.run()  
+            mcflt.run()
         except Exception as e:
             raise RuntimeError(f"MCFLIRT failed with error: {e}")
-        
+
         # Output path of the realigned image
         out_file = mcflt.output_spec.out_file
 

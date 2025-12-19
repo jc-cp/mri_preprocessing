@@ -1,3 +1,5 @@
+# pylint: disable=invalid-name,too-many-locals
+"""Module for denoising medical images using various filters."""
 from skimage.restoration import denoise_nl_means, denoise_tv_chambolle, denoise_bilateral, denoise_wavelet
 from skimage.filters import gaussian
 import numpy as np
@@ -40,7 +42,7 @@ class Denoising(BaseProcessor):
         if image.ndim == 3:
             denoised = np.zeros_like(image)
             for i in range(image.shape[0]):
-                denoised[i] = denoise_nl_means(image[i], 
+                denoised[i] = denoise_nl_means(image[i],
                                              h=h * np.std(image[i]),
                                              patch_size=patch_radius,
                                              patch_distance=search_radius,
@@ -50,11 +52,11 @@ class Denoising(BaseProcessor):
                               patch_size=patch_radius,
                               patch_distance=search_radius,
                               fast_mode=True)
-    
+
     def tv_denoising(self, image, config):
         weight = config.get('weight', 0.1)
         n_iter_max = config.get('n_iter_max', 200)
-        
+
         return denoise_tv_chambolle(image, weight=weight,
                                   max_num_iter=n_iter_max,
                                   channel_axis=None)  # None for 3D images
@@ -84,7 +86,7 @@ class Denoising(BaseProcessor):
                     cval=cval
                 )
             return denoised
-        
+
         return denoise_bilateral(
             image,
             win_size=win_size,
@@ -180,13 +182,13 @@ class Denoising(BaseProcessor):
         wavelet_levels = config.get('wavelet_levels', 3)
         mode = config.get('mode', 'soft')
 
-        return denoise_wavelet(image, 
+        return denoise_wavelet(image,
                              wavelet=wavelet,
                              sigma=sigma,
                              wavelet_levels=wavelet_levels,
                              mode=mode,
                              channel_axis=None)  # None for 3D images
-    
+
     def medfilt_denoising(self, image, config):
         # Get parameters from config
         kernel_size = config.get('kernel_size', 3)

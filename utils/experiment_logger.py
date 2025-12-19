@@ -1,9 +1,21 @@
+"""Utility module for logging experiment data."""
 import json
 from pathlib import Path
 from datetime import datetime
+
 import streamlit as st
 
+
 def save_experiment_log(experiment_data):
+    """
+    Save experiment data to a JSON log file.
+
+    Args:
+        experiment_data: Dictionary containing experiment information
+
+    Returns:
+        bool: True if successful, False otherwise
+    """
     log_dir = Path("experiment_logs")
     log_dir.mkdir(exist_ok=True)
 
@@ -18,13 +30,14 @@ def save_experiment_log(experiment_data):
             serializable_data[key] = str(value)
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    filename = f"experiment_{timestamp}_{serializable_data['experiment_name']}.json"
+    exp_name = serializable_data['experiment_name']
+    filename = f"experiment_{timestamp}_{exp_name}.json"
 
     try:
-        with open(log_dir / filename, "w") as f:
+        with open(log_dir / filename, "w", encoding="utf-8") as f:
             json.dump(serializable_data, f, indent=4)
-    except Exception as e:
-        st.error(f"Error saving experiment log: {str(e)}")
+    except Exception as exc:
+        st.error(f"Error saving experiment log: {str(exc)}")
         return False
-    
-    return True 
+
+    return True

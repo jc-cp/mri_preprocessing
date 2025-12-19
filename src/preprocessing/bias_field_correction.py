@@ -1,3 +1,4 @@
+# pylint: disable=possibly-used-before-assignment
 """
 A module for performing bias field correction on medical images.
 
@@ -111,7 +112,7 @@ class BiasFieldCorrection:
             corrector.SetBiasFieldFullWidthAtHalfMaximum(params["bf_fwhm"])
             corrector.SetWienerFilterNoise(params["wiener_noise"])
             corrector.SetNumberOfHistogramBins(params["histogram_bins"])
-    
+
             # Execute correction
             corrected_img = corrector.Execute(sitk_image)
 
@@ -123,7 +124,7 @@ class BiasFieldCorrection:
         Based on: https://github.com/lucianoAvinas/lapgm
         """
         try:
-            
+
             # Set GPU if configured
             config = self.config.get("bias_field_correction", {}).get("methods", {}).get("lapgm", {})
 
@@ -131,45 +132,45 @@ class BiasFieldCorrection:
             if use_gpu:
                 print("Setting LAPGM to use GPU")
                 lapgm.use_gpu(True)
-            
+
             # Convert image to sequence array format
             image_data = image.get_fdata()
-            
+
             # Simple normalization to [0,1] range
             image_data = image_data - image_data.min()
             image_data = image_data / (image_data.max() + np.finfo(float).eps)
-            
+
             # Scale to reasonable intensity range [0.1, 1.0] to avoid numerical issues
             image_data = 0.9 * image_data + 0.1
-            
+
             sequence_array = lapgm.to_sequence_array([image_data])
-            
+
             # Initialize LapGM
             debias_obj = lapgm.LapGM()
-            
+
             # Set required hyperparameters from config or defaults
             debias_obj.set_hyperparameters(
                 tau=config.get("tau", 1.0),  # inverse penalty strength
                 n_classes=config.get("n_classes", 3)  # number of classes
             )
-            
+
             # Specify cylindrical decay
             debias_obj.specify_cylindrical_decay(
                 alpha=config.get("alpha", 2.0)  # penalty relaxation
             )
-            
+
             # Estimate parameters and debias
             params = debias_obj.estimate_parameters(sequence_array)
             debiased_array = lapgm.debias(sequence_array, params)
-            
+
             # Normalize if specified
             if config.get("normalize", True):
                 target_intensity = config.get("target_intensity", 1000.0)
                 debiased_array = lapgm.normalize(debiased_array, params, target_intensity)
-            
+
             # Convert back to Nifti (take first channel)
             debiased_image = debiased_array[0]
-            
+
             # Rescale back to original intensity range
             orig_range = image.get_fdata().max() - image.get_fdata().min()
             debiased_image = (debiased_image - 0.1) / 0.9  # Undo [0.1, 1.0] scaling
@@ -178,8 +179,7 @@ class BiasFieldCorrection:
             if use_gpu:
                 lapgm.use_gpu(False)
             return nib.Nifti1Image(debiased_image, image.affine)
-            
+
         except Exception as e:
             print(f"Error during bias field correction: {e}")
             raise e
-        

@@ -1,7 +1,7 @@
 """
 A module for converting medical images between different formats.
 
-This module defines an `ImageConversion` class that can be used to convert medical images 
+This module defines an `ImageConversion` class that can be used to convert medical images
 between DICOM, NRRD, and NIFTI formats.
 The class provides a `run` method that takes an image and returns a converted NIFTI image.
 The class can be configured using a dictionary of configuration parameters.
@@ -14,7 +14,6 @@ import nibabel as nib
 import nrrd
 import numpy as np
 import pydicom
-import SimpleITK as sitk
 
 
 class ImageConversion:
@@ -64,22 +63,22 @@ class ImageConversion:
         """Convert NRRD to NIFTI format."""
         # Read NRRD file
         data, header = nrrd.read(image_path)
-        
+
         # Reorient to match NIFTI convention (RAS+)
         space_directions = header.get('space directions')
         if space_directions is not None:
             # Convert to numpy array for easier manipulation
             space_directions = np.array(space_directions)
-            
+
             # Determine the primary direction of each axis
             primary_directions = np.argmax(np.abs(space_directions), axis=1)
-            
+
             # Get the signs of the primary directions
             signs = np.sign([space_directions[i, primary_directions[i]] for i in range(3)])
-            
+
             # First transpose to match NIFTI dimension order
             data = np.transpose(data, (2, 0, 1))
-            
+
             # Flip axes where needed to match RAS+ orientation
             for i in range(3):
                 if signs[i] < 0:
@@ -87,11 +86,11 @@ class ImageConversion:
         else:
             # If no space directions, just transpose to match NIFTI convention
             data = np.transpose(data, (2, 0, 1))
-        
+
         # Create affine matrix
         spacing = header.get('spacing', (1.0, 1.0, 1.0))
         affine = np.diag(list(spacing) + [1.0])
-        
+
         # Create NIFTI image
         nifti_image = nib.Nifti1Image(data, affine)
         return nifti_image
@@ -108,7 +107,7 @@ class ImageConversion:
                 dicom2nifti.convert_dicom.dicom_array_to_nifti(
                     dicom_image, temp_dir, reorient_nifti=True
                 )
-            
+
             # Load the converted NIFTI file
             nifti_file = os.path.join(temp_dir, os.listdir(temp_dir)[0])
             return nib.load(nifti_file)

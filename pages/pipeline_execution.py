@@ -1,11 +1,15 @@
-import streamlit as st
-from pathlib import Path
+"""Module for pipeline execution and monitoring."""
 import json
+from pathlib import Path
+
+import streamlit as st
+
 from src.pipeline import Pipeline
 from utils.config_display import display_config_tree
 
 
 def page_pipeline_execution():
+    """Display the pipeline execution page with real-time monitoring."""
     st.header("Pipeline Execution")
 
     # Use maximum width for columns (total should be 12 for full width)
@@ -54,7 +58,10 @@ def page_pipeline_execution():
             "current_substep" in st.session_state
             and "total_substeps" in st.session_state
         ):
-            substep_text = f"Step {st.session_state.current_substep} of {st.session_state.total_substeps}"
+            substep_text = (
+                f"Step {st.session_state.current_substep} of "
+                f"{st.session_state.total_substeps}"
+            )
             if "substep_progress" in st.session_state:
                 substep_progress_placeholder.progress(
                     st.session_state.substep_progress, substep_text
@@ -83,18 +90,22 @@ def page_pipeline_execution():
                 # Save current config to a temporary file
                 temp_config_path = Path("temp_config.json")
 
-                st.session_state.experiment_data["config"]["image_loading"]["file_paths"] = [str(path) for path in st.session_state.experiment_data["image_paths"]]
-                st.session_state.experiment_data["config"]["image_loading"]["input_dir"] = str(st.session_state.experiment_data["image_paths"][0].parent)
+                img_paths = st.session_state.experiment_data["image_paths"]
+                img_loading = (st.session_state.experiment_data["config"]
+                               ["image_loading"])
+                img_loading["file_paths"] = [str(path) for path in img_paths]
+                img_loading["input_dir"] = str(img_paths[0].parent)
 
-                with open(temp_config_path, "w") as f:
+                with open(temp_config_path, "w", encoding="utf-8") as f:
                     json.dump(st.session_state.experiment_data["config"], f, indent=4)
 
                 st.session_state.terminal_output = []
                 st.session_state.terminal_output.append(
                     "Starting pipeline execution..."
                 )
+                exp_name = st.session_state.experiment_data['experiment_name']
                 st.session_state.terminal_output.append(
-                    f"Loading configuration for experiment: {st.session_state.experiment_data['experiment_name']}"
+                    f"Loading configuration for experiment: {exp_name}"
                 )
                 st.session_state.terminal_output.append(
                     "Initializing pipeline steps..."
@@ -104,7 +115,9 @@ def page_pipeline_execution():
 
                 print("current_step", st.session_state.processed_images)
 
-                pipeline = Pipeline(temp_config_path, streamlit_state=st.session_state)
+                pipeline = Pipeline(
+                    temp_config_path, streamlit_state=st.session_state
+                )
                 pipeline.run()
 
                 st.session_state.terminal_output.append(
@@ -117,7 +130,8 @@ def page_pipeline_execution():
                 st.rerun()
 
     # Display processed images in real-time
-    if "processed_images" in st.session_state and st.session_state.processed_images:
+    if ("processed_images" in st.session_state and
+            st.session_state.processed_images):
         st.markdown("---")
         st.header("Processing Results")
 
@@ -128,22 +142,28 @@ def page_pipeline_execution():
                 if img_data["processing_steps"]:
                     # Create columns for each processing step
                     cols = st.columns(len(img_data["processing_steps"]))
-                    
+
                     # Display each processing step result in its own column
-                    for idx, (col, step_data) in enumerate(zip(cols, img_data["processing_steps"])):
+                    for idx, (col, step_data) in enumerate(
+                        zip(cols, img_data["processing_steps"])
+                    ):
                         with col:
-                            st.markdown(f"**Step {idx + 1}: {step_data['current_step'].replace('_', ' ').title()}**")
+                            step_name = (step_data['current_step']
+                                         .replace('_', ' ').title())
+                            st.markdown(f"**Step {idx + 1}: {step_name}**")
                             st.image(
                                 step_data["image"],
-                                caption=f"After {step_data['current_step'].replace('_', ' ').title()}",
+                                caption=f"After {step_name}",
                                 use_container_width=True,
                                 clamp=True,
                             )
                             st.markdown(
-                                f"*Step {step_data['current_substep']} of {st.session_state.total_substeps}*"
+                                f"*Step {step_data['current_substep']} of "
+                                f"{st.session_state.total_substeps}*"
                             )
                 else:
                     st.info("Processing not started or in progress...")
-            
+
             # Add a separator between images
             st.markdown("---")
+
