@@ -1,15 +1,15 @@
+# pylint: disable=invalid-name,too-many-locals
+"""Module for denoising medical images using various filters."""
 from skimage.restoration import denoise_nl_means, denoise_tv_chambolle, denoise_bilateral, denoise_wavelet
 from skimage.filters import gaussian
 import numpy as np
 from scipy.signal import medfilt
-import nibabel as nib
-import os
-from src.utils.helper_functions import prepare_output_directory
+from src.preprocessing.base_processor import BaseProcessor
 
 
-class Denoising:
+class Denoising(BaseProcessor):
     def __init__(self, config: dict):
-        self.config = config
+        super().__init__(config)
         self.methods = {
             "gaussian": self.gaussian_denoising,
             "nlm": self.nlm_denoising,
@@ -25,26 +25,7 @@ class Denoising:
         Expects a nibabel image object or numpy array
         Returns denoised image data
         """
-        saving_images = self.config["saving_files"]
-        output_dir = self.config["output_dir"]  
-        # Convert nibabel image to numpy array if needed
-        if isinstance(image, nib.Nifti1Image):
-            image_data = image.get_fdata()
-        else:
-            image_data = image
-
-        # Apply enabled denoising methods
-        for method_name, method in self.methods.items():
-            if self.config['methods'][method_name]['enabled']:
-                func = self.methods.get(method_name, None)
-                if func:
-                    image_data = func(image_data, self.config['methods'][method_name])
-                if saving_images:
-                    new_dir, img_id = prepare_output_directory(output_dir, image_path)
-                    filename = os.path.join(new_dir, f"{img_id}_{method_name}_denoised.nii.gz")
-                    nib.save(image, filename)
-        
-        return nib.Nifti1Image(image_data, image.affine, image.header)
+        return self.run_methods(image, image_path, suffix="denoised", apply_to_data=True)
 
     def gaussian_denoising(self, image, config):
         sigma = config.get('sigma_gaussian', 1)
@@ -61,7 +42,7 @@ class Denoising:
         if image.ndim == 3:
             denoised = np.zeros_like(image)
             for i in range(image.shape[0]):
-                denoised[i] = denoise_nl_means(image[i], 
+                denoised[i] = denoise_nl_means(image[i],
                                              h=h * np.std(image[i]),
                                              patch_size=patch_radius,
                                              patch_distance=search_radius,
@@ -71,11 +52,11 @@ class Denoising:
                               patch_size=patch_radius,
                               patch_distance=search_radius,
                               fast_mode=True)
-    
+
     def tv_denoising(self, image, config):
         weight = config.get('weight', 0.1)
         n_iter_max = config.get('n_iter_max', 200)
-        
+
         return denoise_tv_chambolle(image, weight=weight,
                                   max_num_iter=n_iter_max,
                                   channel_axis=None)  # None for 3D images
@@ -105,7 +86,7 @@ class Denoising:
                     cval=cval
                 )
             return denoised
-        
+
         return denoise_bilateral(
             image,
             win_size=win_size,
@@ -201,13 +182,13 @@ class Denoising:
         wavelet_levels = config.get('wavelet_levels', 3)
         mode = config.get('mode', 'soft')
 
-        return denoise_wavelet(image, 
+        return denoise_wavelet(image,
                              wavelet=wavelet,
                              sigma=sigma,
                              wavelet_levels=wavelet_levels,
                              mode=mode,
                              channel_axis=None)  # None for 3D images
-    
+
     def medfilt_denoising(self, image, config):
         # Get parameters from config
         kernel_size = config.get('kernel_size', 3)

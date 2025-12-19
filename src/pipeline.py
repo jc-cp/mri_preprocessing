@@ -1,9 +1,9 @@
 """
 A preprocessing pipeline for medical images.
 
-This script defines a `Pipeline` class that can be used to run a preprocessing 
+This script defines a `Pipeline` class that can be used to run a preprocessing
 pipeline on a set of medical images.
-The pipeline consists of several preprocessing steps, such as registration, 
+The pipeline consists of several preprocessing steps, such as registration,
 resampling, skull stripping, and normalization.
 The pipeline can be configured using a JSON configuration file.
 
@@ -21,21 +21,18 @@ Example usage:
 
 import json
 import logging
+from pathlib import Path
+
 from src.preprocessing.quality_control import QualityControl
 from src.preprocessing.bias_field_correction import BiasFieldCorrection
-from src.preprocessing.binning import Binning
 from src.preprocessing.denoising import Denoising
-from src.preprocessing.filtering import Filtering
 from src.preprocessing.normalization import Normalization
 from src.preprocessing.registration import Registration
 from src.preprocessing.resampling import Resampling
-from src.preprocessing.skull_stripping import SkullStripping
 from src.utils.image_conversion import ImageConversion
 from src.utils.image_loading import ImageLoading
 from src.utils.image_saving import ImageSaving
 from src.utils.image_visualization import ImageVisualization
-from pathlib import Path
-import streamlit as st
 
 
 class Pipeline:
@@ -98,8 +95,7 @@ class Pipeline:
 
         self.streamlit_state = streamlit_state
 
-        print("Initialized pipeline with following steps: "),
-    
+        print("Initialized pipeline with following steps:")
 
     def run(self):
         """
@@ -131,7 +127,9 @@ class Pipeline:
 
             if self.streamlit_state is not None:
                 self.streamlit_state.current_image = current_image
-                self.streamlit_state.current_step = f"Processing image {current_image}/{total_images}: {image_name}"
+                step_msg = (f"Processing image {current_image}/{total_images}: "
+                            f"{image_name}")
+                self.streamlit_state.current_step = step_msg
                 self.streamlit_state.progress = current_image / total_images
 
                 # Create a new list for this image's processing steps
@@ -194,7 +192,7 @@ class Pipeline:
         # Count only steps that are enabled AND have display_step=True
         total_steps = len([
             step for step, config in self.config.items()
-            if isinstance(config, dict) 
+            if isinstance(config, dict)
             and config.get("enabled", False)
             and config.get("display_step", True)
         ])
@@ -214,18 +212,22 @@ class Pipeline:
                         self.streamlit_state.current_step = step_message
                         self.streamlit_state.current_substep = current_step
                         self.streamlit_state.total_substeps = total_steps
-                        self.streamlit_state.substep_progress = current_step / total_steps if total_steps > 0 else 0
+                        substep_prog = (current_step / total_steps
+                                        if total_steps > 0 else 0)
+                        self.streamlit_state.substep_progress = substep_prog
                         self.streamlit_state.terminal_output.append(step_message)
 
                     step_instance = step_class(self.config[step_name])
-                    
+
                     # Process the image
                     image = step_instance.run(image, image_path)
 
-                    # Store the data for visualization only if display_step is True
-                    if current_image_steps is not None and self.config[step_name].get("display_step", True):
+                    # Store data for visualization only if display_step is True
+                    if (current_image_steps is not None and
+                            self.config[step_name].get("display_step", True)):
                         success_message = f"Successfully applied {step_name}"
-                        self.streamlit_state.terminal_output.append(success_message)
+                        self.streamlit_state.terminal_output.append(
+                            success_message)
 
                         current_image_steps.append({
                             "current_step": step_name,
@@ -261,7 +263,9 @@ class Pipeline:
         """
         Prepares an image for visualization.
         """
+        # pylint: disable=protected-access
         image = self.image_visualization._get_slice(image)
         image = self._normalize_image(image)
 
         return image
+

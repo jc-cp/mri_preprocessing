@@ -1,9 +1,13 @@
+"""Module for slice timing correction."""
+import os
+
 import nibabel as nib
 import os
 from nipype.interfaces import spm
 
 
 class SliceTimingCorrection:
+    """Class for slice timing correction."""
     def __init__(self, config: dict):
         self.config = config
 
@@ -29,7 +33,7 @@ class SliceTimingCorrection:
         time_acquisition = tr - tr/img.shape[-1]
 
         # Define SPM SliceTiming correction instance
-        st = spm.SliceTiming(in_file=image, num_slices=img.shape[-1], time_acquisition=time_acquisition, 
+        st = spm.SliceTiming(in_file=image, num_slices=img.shape[-1], time_acquisition=time_acquisition,
                              time_repetition=tr, slice_order=list(range(1, img.shape[-1] + 1, 2)) + list(range(2, img.shape[-1] + 1, 2)))
         try:
             st.run()

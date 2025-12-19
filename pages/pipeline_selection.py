@@ -1,4 +1,6 @@
+"""Module for pipeline step selection."""
 import streamlit as st
+
 
 def page_pipeline_selection():
     st.header("Pipeline Step Selection")
@@ -32,12 +34,15 @@ def page_pipeline_selection():
         # Store both selected steps and updated config
         st.session_state.selected_steps = selected_steps
         st.session_state.experiment_data["selected_steps"] = selected_steps
-        st.session_state.experiment_data["config"] = st.session_state.config.copy()
-        st.session_state.experiment_data["config"]["image_loading"]["file_paths"] = st.session_state.experiment_data["image_paths"]
-        st.session_state.experiment_data["config"]["image_loading"]["input_dir"] = st.session_state.experiment_data["image_paths"][0].parent
+        config_copy = st.session_state.config.copy()
+        st.session_state.experiment_data["config"] = config_copy
+        img_paths = st.session_state.experiment_data["image_paths"]
+        img_loading = st.session_state.experiment_data["config"]["image_loading"]
+        img_loading["file_paths"] = img_paths
+        img_loading["input_dir"] = img_paths[0].parent
         st.session_state.current_page = "parameter_configuration"
         st.rerun()
 
     if st.button("Back"):
         st.session_state.current_page = "input_selection"
-        st.rerun() 
+        st.rerun()

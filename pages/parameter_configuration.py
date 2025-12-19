@@ -1,7 +1,22 @@
+"""Module for handling parameter configuration in the MRI preprocessing pipeline."""
 import streamlit as st
 from utils.experiment_logger import save_experiment_log
 
-def process_parameters(config_section, step, current_path=[]):
+
+def process_parameters(config_section, step, current_path=None):
+    """
+    Process configuration parameters recursively.
+
+    Args:
+        config_section: Configuration section dictionary
+        step: Current step name
+        current_path: Path to current parameter in config hierarchy
+
+    Returns:
+        Dictionary of processed parameters
+    """
+    if current_path is None:
+        current_path = []
     params = {}
     for key, value in config_section.items():
         if key == "enabled":
@@ -51,7 +66,21 @@ def process_parameters(config_section, step, current_path=[]):
                 )
     return params
 
-def process_method_parameters(config_section, step, method_name, current_path=[]):
+def process_method_parameters(config_section, step, method_name, current_path=None):
+    """
+    Process method-specific configuration parameters.
+
+    Args:
+        config_section: Configuration section dictionary
+        step: Current step name
+        method_name: Name of the method
+        current_path: Path to current parameter in config hierarchy
+
+    Returns:
+        Dictionary of processed method parameters
+    """
+    if current_path is None:
+        current_path = []
     method_params = {}
     for key, value in config_section.items():
         if key == "enabled":
@@ -104,6 +133,7 @@ def process_method_parameters(config_section, step, method_name, current_path=[]
     return method_params
 
 def page_parameter_configuration():
+    """Display the parameter configuration page."""
     st.header("Parameter Configuration")
 
     selected_steps = st.session_state.experiment_data["selected_steps"]
@@ -114,37 +144,45 @@ def page_parameter_configuration():
             continue
         with st.expander(f"{step.replace('_', ' ').title()}", expanded=False):
             step_config = st.session_state.config[step]
-            
+
             if "methods" in step_config:
                 method_names = list(step_config["methods"].keys())
-                tabs = st.tabs([name.replace('_', ' ').title() for name in method_names])
-                
+                tabs = st.tabs([
+                    name.replace('_', ' ').title() for name in method_names
+                ])
+
                 params = {"methods": {}}
-                
-                # Initialize the enabled method in session state if not present
+
+                # Initialize enabled method in session state if not present
                 if f"enabled_method_{step}" not in st.session_state:
-                    # Find the currently enabled method from config, or None if none enabled
+                    # Find currently enabled method from config,
+                    # or None if none enabled
                     current_enabled = next(
-                        (name for name, config in step_config["methods"].items() 
-                         if config.get("enabled", False)), 
+                        (name for name, config in
+                         step_config["methods"].items()
+                         if config.get("enabled", False)),
                         None
                     )
                     st.session_state[f"enabled_method_{step}"] = current_enabled
-                
+
                 for tab, method_name in zip(tabs, method_names):
                     with tab:
                         method_config = step_config["methods"][method_name]
-                        
+
                         # If this method is checked, uncheck all others
                         method_enabled = st.checkbox(
                             "Enable Method",
-                            value=st.session_state[f"enabled_method_{step}"] == method_name,
+                            value=(st.session_state[f"enabled_method_{step}"]
+                                   == method_name),
                             key=f"method_enabled_{step}_{method_name}",
-                            on_change=lambda s=step, m=method_name: set_enabled_method(s, m)
+                            on_change=lambda s=step, m=method_name:
+                            set_enabled_method(s, m)
                         )
 
                         if method_enabled:
-                            method_params = process_method_parameters(method_config, step, method_name)
+                            method_params = process_method_parameters(
+                                method_config, step, method_name
+                            )
                             params["methods"][method_name] = {
                                 "enabled": True,
                                 **method_params,
@@ -153,7 +191,7 @@ def page_parameter_configuration():
                             params["methods"][method_name] = {"enabled": False}
             else:
                 params = process_parameters(step_config, step)
-            
+
             parameters[step] = params
 
     col1, col2 = st.columns([1, 5])
@@ -171,10 +209,11 @@ def page_parameter_configuration():
             st.rerun()
 
 def set_enabled_method(step, method_name):
-    """Helper function to ensure only one method is enabled at a time"""
+    """Helper function to ensure only one method is enabled at a time."""
     # If the clicked checkbox was already enabled, disable it
     if st.session_state[f"enabled_method_{step}"] == method_name:
         st.session_state[f"enabled_method_{step}"] = None
     # Otherwise, enable this method and disable all others
     else:
-        st.session_state[f"enabled_method_{step}"] = method_name 
+        st.session_state[f"enabled_method_{step}"] = method_name
+

@@ -1,21 +1,18 @@
 """
 A module for performing image registration using various methods.
 
-This module defines a `Registration` class that can be used to register an image 
+This module defines a `Registration` class that can be used to register an image
 to a template image using various registration methods.
-The class provides a `run` method that takes an image and a path to a template image 
+The class provides a `run` method that takes an image and a path to a template image
 and returns the registered image.
 The class can be configured using a dictionary of configuration parameters.
 """
-import glob
 import os
 
 import itk
 import nibabel as nib
-import numpy as np
 import SimpleITK as sitk
 from nipype.interfaces import spm
-from nipype.interfaces.fsl import FLIRT
 
 from src.utils import helper_functions as hf
 from src.utils.helper_functions import (
@@ -138,17 +135,17 @@ class Registration:
     def spm_registration(self, image: nib.Nifti1Image, template: str) -> nib.Nifti1Image:
         """
         Register image using SPM's Normalize12.
-        
+
         Args:
             image: Input image to register
             template: Path to template image
-        
+
         Returns:
             Registered image as Nifti1Image
         """
         try:
             spm_config = self.config["methods"]["spm"]
-            
+
             # Save input image temporarily if it's in memory
             if isinstance(image, nib.Nifti1Image):
                 temp_input = os.path.join(self.config["output_dir"], "temp_input.nii")
@@ -163,10 +160,10 @@ class Registration:
             segment.inputs.channel_info = (0.0001, 60, (True, True))
             segment.inputs.sampling_distance = spm_config["sampling_distance"]
             segment.inputs.write_deformation_fields = [True, True]
-            
+
             print("Running SPM segmentation...")
             segment_result = segment.run()
-            
+
             # Then run normalization using the deformation field
             normalize = spm.Normalize12()
             normalize.inputs.image_to_align = input_path
@@ -176,37 +173,37 @@ class Registration:
             normalize.inputs.write_voxel_sizes = self.config["spacing"]
             normalize.inputs.template = self.config["reference"]
             normalize.inputs.interpolation = spm_config["interpolation"]
-            
+
             print("Running SPM normalization...")
             normalize_result = normalize.run()
-            
+
             # Load and return the normalized image
             registered_image = nib.load(normalize_result.outputs.normalized_files)
-            
+
             # Cleanup temporary files
             if isinstance(image, nib.Nifti1Image):
                 os.remove(temp_input)
-                
+
             return registered_image
-            
+
         except Exception as e:
             raise Exception(f"Error in SPM registration: {str(e)}")
 
     def fsl_registration(self, image: nib.Nifti1Image, template: str) -> nib.Nifti1Image:
         """
         Register image using FSL FLIRT.
-        
+
         Args:
             image: Input image to register
             template: Path to template image
-        
+
         Returns:
             Registered image as Nifti1Image
         """
         try:
             from nipype.interfaces import fsl
             fsl_config = self.config["methods"]["fsl"]
-            
+
             # Save input image temporarily if it's in memory
             if isinstance(image, nib.Nifti1Image):
                 temp_input = os.path.join(self.config["output_dir"], "temp_input.nii.gz")
@@ -227,19 +224,19 @@ class Registration:
             flirt.inputs.searchr_z = fsl_config["search_angles"]
             flirt.inputs.bins = fsl_config["bins"]
             flirt.inputs.init = fsl_config["init"]
-            
+
             print("Running FSL registration...")
             flirt_result = flirt.run()
-            
+
             # Load and return the registered image
             registered_image = nib.load(flirt_result.outputs.out_file)
-            
+
             # Cleanup temporary files
             if isinstance(image, nib.Nifti1Image):
                 os.remove(temp_input)
-                
+
             return registered_image
-            
+
         except Exception as e:
             raise Exception(f"Error in FSL registration: {str(e)}")
 
@@ -258,7 +255,7 @@ class Registration:
                 sitk.Euler3DTransform(),
                 sitk.CenteredTransformInitializerFilter.GEOMETRY,
             )
-            
+
             registration_method = sitk.ImageRegistrationMethod()
             registration_method.SetMetricAsMattesMutualInformation(
                 numberOfHistogramBins=sitk_config["histogram_bins"]
@@ -284,7 +281,7 @@ class Registration:
             if sitk_config["smoothing_sigmas_in_physical_units"]:
                 registration_method.SmoothingSigmasAreSpecifiedInPhysicalUnitsOn()
             registration_method.SetInitialTransform(transform)
-            
+
             print("Sitk registration ongoing...")
             final_transform = registration_method.Execute(template_sitk, moving_img)
 

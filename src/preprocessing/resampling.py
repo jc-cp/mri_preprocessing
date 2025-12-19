@@ -1,8 +1,9 @@
+# pylint: disable=possibly-used-before-assignment
 """
 This script demonstrates how to resample a 3D medical image using different methods.
 
-The Resampling class provides two methods for resampling images: ANTs and SciPy. The class takes 
-a configuration dictionary as input, which specifies the resampling methods to enable and the 
+The Resampling class provides two methods for resampling images: ANTs and SciPy. The class takes
+a configuration dictionary as input, which specifies the resampling methods to enable and the
 target voxel spacing for each method.
 """
 import os
@@ -110,7 +111,7 @@ class Resampling:
     def resample_with_scipy(self, image: nib.Nifti1Image, spacing: tuple) -> np.ndarray:
         """
         Resamples the given image using SciPy's zoom function with configurable parameters.
-        
+
         Parameters
         ----------
         image : nib.Nifti1Image
@@ -131,7 +132,7 @@ class Resampling:
             img_data = image.get_fdata()
             current_spacing = np.array(image.header.get_zooms()[:3])
             scale_factors = current_spacing / np.array(spacing)
-            
+
             # Apply resampling
             resampled = zoom(
                 img_data,
@@ -141,29 +142,29 @@ class Resampling:
                 prefilter=True,
                 grid_mode=False
             )
-            
+
             if preserve_range:
                 # Ensure output intensity range matches input
                 resampled = np.clip(resampled, img_data.min(), img_data.max())
-                
+
             new_affine = image.affine.copy()
             new_affine[:3, :3] = np.diag(spacing)
             return nib.Nifti1Image(resampled, new_affine)
-            
+
         except Exception as e:
             raise Exception(f"Error in scipy resampling: {str(e)}")
 
     def resample_with_sitk(self, image: nib.Nifti1Image, spacing: tuple) -> nib.Nifti1Image:
         """
         Resamples image using SimpleITK with configurable interpolation.
-        
+
         Parameters
         ----------
         image : nib.Nifti1Image
             Input image
         spacing : tuple
             Target spacing
-            
+
         Returns
         -------
         nib.Nifti1Image
@@ -206,10 +207,10 @@ class Resampling:
 
             # Execute resampling
             resampled_img = resampler.Execute(sitk_image)
-            
+
             # Convert back to Nibabel
             return hf.sitk_to_nib(resampled_img)
-            
+
         except Exception as e:
             print(f"Exception thrown while setting up the resampling filter: {e}")
             raise Exception(f"Error in SimpleITK resampling: {str(e)}")
@@ -217,14 +218,14 @@ class Resampling:
     def resample_with_itk(self, image: nib.Nifti1Image, spacing: tuple) -> nib.Nifti1Image:
         """
         Resample the moving image to 1x1x1mm spacing using ITK.
-        
+
         Parameters
         ----------
         moving_image : nib.Nifti1Image
             Input image to resample
         _ : ignored
             Spacing parameter is ignored as we use fixed 1x1x1mm spacing
-            
+
         Returns
         -------
         nib.Nifti1Image
@@ -233,19 +234,19 @@ class Resampling:
         try:
             # Convert to canonical orientation for consistency
             image = nib.as_closest_canonical(image)
-            
+
             # Convert to ITK
             ImageType = itk.Image[itk.F, 3]
             itk_image = itk.GetImageFromArray(image.get_fdata().astype(np.float32))
             itk_image.SetSpacing(image.header.get_zooms()[:3])
-            
+
             # Get original size and spacing
             original_size = itk_image.GetLargestPossibleRegion().GetSize()
             original_spacing = itk_image.GetSpacing()
-            
+
             # Set target spacing
             target_spacing = spacing
-            
+
             # Calculate new size
             new_size = [
                 int(round(original_size[i] * original_spacing[i] / target_spacing[i]))
@@ -260,21 +261,21 @@ class Resampling:
             resample.SetOutputOrigin(itk_image.GetOrigin())
             resample.SetOutputDirection(itk_image.GetDirection())
             resample.SetDefaultPixelValue(0)
-            
+
             # Set linear interpolation
             interpolator = itk.LinearInterpolateImageFunction[ImageType, itk.D].New()
             resample.SetInterpolator(interpolator)
-            
+
             # Execute resampling
             resampled_image = resample.Execute()
 
             # Convert back to numpy and create Nifti
             resampled_array = itk.GetArrayFromImage(resampled_image)
-            
+
             # Create new affine with 1mm spacing
             new_affine = image.affine.copy()
             new_affine[:3, :3] = np.diag(spacing)
-            
+
             return nib.Nifti1Image(resampled_array, new_affine)
 
         except Exception as e:

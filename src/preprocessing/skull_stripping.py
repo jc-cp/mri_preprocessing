@@ -1,8 +1,10 @@
+"""Module for skull stripping in medical images."""
 import SimpleITK as sitk
 
 
 
 class SkullStripping:
+    """Class for skull stripping in medical images."""
     def __init__(self, config: dict):
         self.config = config
         self.methods = {

@@ -6,7 +6,6 @@ import os
 
 import nibabel as nib
 import nrrd
-import numpy as np
 import pandas as pd
 from pydicom import dcmread
 from pydicom.filebase import DicomBytesIO
@@ -44,6 +43,7 @@ class ImageLoading:
 
                     # Simple wrapper class to maintain consistent interface
                     class NRRDImage:
+                        """Wrapper class for NRRD images."""
                         def __init__(self, data, header):
                             self.data = data
                             self.header = header
@@ -80,15 +80,13 @@ class ImageLoading:
             for file_path in self.file_paths:
                 if file_path.endswith(".csv"):
                     d_f = pd.read_csv(file_path)
-                    for image_path in d_f["image_path"].tolist():
-                        yield image_path
+                    yield from d_f["image_path"].tolist()
                 else:
                     yield file_path
         elif self.paths:
             for path in self.paths:
                 if os.path.isdir(path):
-                    for image_path in self._get_images_from_directory(path):
-                        yield image_path
+                    yield from self._get_images_from_directory(path)
                 elif os.path.isfile(path):
                     yield path
                 else:

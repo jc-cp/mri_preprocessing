@@ -1,9 +1,11 @@
+"""Module for handling input selection in the MRI preprocessing pipeline."""
 import os
-import streamlit as st
 import uuid
-
 from pathlib import Path
 from datetime import datetime
+
+import streamlit as st
+
 
 def page_input_selection():
     st.header("Input Selection")
@@ -25,8 +27,8 @@ def page_input_selection():
         key="cohort_name",
     )
     notes = st.text_area(
-        "Notes", 
-        value=st.session_state.experiment_data.get("notes", ""), 
+        "Notes",
+        value=st.session_state.experiment_data.get("notes", ""),
         key="notes"
     )
 
@@ -55,13 +57,14 @@ def page_input_selection():
     st.subheader("Directory Selection")
     st.text("Select the images you want to process.")
     uploaded_files = st.file_uploader(
-        "Choose multiple files", 
-        type=None, 
+        "Choose multiple files",
+        type=None,
         key="file_upload",
         accept_multiple_files=True,
     )
+    file_paths = None
     if len(uploaded_files) > 0:
-        for root, dirs, files in os.walk(Path(os.getcwd())):
+        for root, _dirs, files in os.walk(Path(os.getcwd())):
             if uploaded_files[0].name in files:
                 image_dir = Path(root)
                 break
@@ -69,10 +72,10 @@ def page_input_selection():
         st.session_state.img_dir = str(image_dir)
     else:
         image_dir = st.session_state.get("img_dir", "")
-    
+
     if image_dir:
         file_paths = [image_dir / path for path in sorted(os.listdir(image_dir))]
-    
+
 
 
     # Store the selections in session state
@@ -101,4 +104,4 @@ def page_input_selection():
             }
         )
         st.session_state.current_page = "pipeline_selection"
-        st.rerun() 
+        st.rerun()
