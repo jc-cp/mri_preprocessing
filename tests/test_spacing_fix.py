@@ -250,9 +250,9 @@ if __name__ == "__main__":
     # Run all tests
     explain_affine_math()
 
-    TEST_1 = test_spacing_preservation()
-    TEST_2 = test_roundtrip_conversion()
-    TEST_3 = test_resampling_workflow()
+    test1 = test_spacing_preservation()
+    test2 = test_roundtrip_conversion()
+    test3 = test_resampling_workflow()
 
     print("\n" + "=" * 70)
     print("FINAL SUMMARY")
