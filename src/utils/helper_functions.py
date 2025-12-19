@@ -8,7 +8,15 @@ import SimpleITK as sitk
 
 
 def sitk_to_nib(sitk_image):
-    """Conversion from SimpleITK to Nibabel preserving spatial information."""
+    """Conversion from SimpleITK to Nibabel preserving spatial information.
+    
+    The affine matrix encodes both the direction (orientation) and spacing 
+    of the image in physical space. The proper construction is:
+    affine[:3, :3] = direction @ diag(spacing)
+    
+    This ensures that when nibabel computes get_zooms() (by taking the L2 norm 
+    of each column), it correctly retrieves the spacing values.
+    """
     np_image = sitk.GetArrayFromImage(sitk_image)
     np_image = np.transpose(np_image, (2, 1, 0))
     origin = np.array(sitk_image.GetOrigin())
@@ -16,7 +24,9 @@ def sitk_to_nib(sitk_image):
     direction = np.array(sitk_image.GetDirection()).reshape((3, 3))
 
     affine = np.eye(4)
-    affine[:3, :3] = direction * spacing
+    # Matrix multiplication: direction @ diag(spacing)
+    # This properly scales each direction vector by its corresponding spacing
+    affine[:3, :3] = direction @ np.diag(spacing)
     affine[:3, 3] = origin
 
     # Create the Nibabel image with the data and affine matrix
@@ -42,8 +52,10 @@ def nib_to_sitk(nib_image):
     data = nib_image.get_fdata()
     affine = nib_image.affine
     origin = affine[:3, 3]
-    direction = affine[:3, :3].flatten()
+    # Extract spacing as the L2 norm of each column (same as get_zooms())
     spacing = np.sqrt((affine[:3, :3] ** 2).sum(axis=0))
+    # Extract direction by normalizing the affine columns
+    direction = (affine[:3, :3] / spacing).flatten()
 
     sitk_image = sitk.GetImageFromArray(np.transpose(data, (2, 1, 0)))
     sitk_image.SetOrigin(origin)
@@ -147,7 +159,7 @@ def itk_to_nib(itk_image: itk.image) -> nib.Nifti1Image:
 
     # Construct affine from origin, spacing, and direction
     affine = np.eye(4)
-    affine[:3, :3] = direction * spacing
+    affine[:3, :3] = direction @ np.diag(spacing)
     affine[:3, 3] = origin
 
     order = [2, 1, 0]
